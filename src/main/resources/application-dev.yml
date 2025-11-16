@@ -1,8 +1,8 @@
 spring:
     application:
-        name: my-day-server
+        name: hr-management-server
     datasource:
-        url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/hr_management_db}
+        url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/hr_management_db_dev}
         username: ${DATABASE_USERNAME:postgres}
         password: ${DATABASE_PASSWORD:pqkiet854A@}
         driver-class-name: org.postgresql.Driver
@@ -12,17 +12,11 @@ spring:
         properties:
             hibernate:
                 dialect: org.hibernate.dialect.PostgreSQLDialect
+    flyway:
+        enabled: false
 server:
     port: ${SERVER_PORT:8080}
 logging:
     level:
         root: INFO
         '[org.springframework.security]': DEBUG
-
-jwt:
-    signer-key: 1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij
-    expiration: 900
-    refresh-token-expiration: 604800
-
-frontend:
-    url: http://localhost:3000

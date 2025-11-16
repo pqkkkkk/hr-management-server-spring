@@ -1,6 +1,6 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
-import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Staff;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 
 /**
  * Data Transfer Objects for Profile module.
@@ -10,11 +10,11 @@ public class DTO {
     public record ProfileDTO(
 
     ){
-        public Staff toEntity(){
-            return Staff.builder()
+        public User toEntity(){
+            return User.builder()
                     .build();
         }
-        public static ProfileDTO fromEntity(Staff staff){
+        public static ProfileDTO fromEntity(User staff){
             return new ProfileDTO(
             );
         }

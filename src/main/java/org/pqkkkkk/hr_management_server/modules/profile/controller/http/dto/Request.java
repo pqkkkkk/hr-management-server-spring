@@ -1,6 +1,6 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
-import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Staff;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 
 /**
  * Request DTOs for Profile module.
@@ -11,8 +11,8 @@ public class Request {
     public record CreateStaffRequest(
             String fullName
     ){
-        public Staff toEntity(){
-            return Staff.builder()
+        public User toEntity(){
+            return User.builder()
                     .fullName(fullName)
                     .build();
         }
