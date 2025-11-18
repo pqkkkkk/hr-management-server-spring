@@ -11,8 +11,8 @@ public class DTO {
 
     ){
         public User toEntity(){
-            return User.builder()
-                    .build();
+            return new User(
+            );
         }
         public static ProfileDTO fromEntity(User staff){
             return new ProfileDTO(

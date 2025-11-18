@@ -12,9 +12,7 @@ public class Request {
             String fullName
     ){
         public User toEntity(){
-            return User.builder()
-                    .fullName(fullName)
-                    .build();
+            return null;
         }
     }
 }
