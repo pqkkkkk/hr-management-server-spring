@@ -14,6 +14,7 @@ public class StaffMapper {
         }
 
         StaffDTO dto = new StaffDTO();
+        dto.setId(staff.getId().toString());
         dto.setName(staff.getName());
         dto.setDateOfBirth(staff.getDateOfBirth());
         dto.setPhoneNumber(staff.getPhoneNumber());

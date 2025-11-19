@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Table(name = "staff_table")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Staff {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @Column(name = "name")
     private String name;

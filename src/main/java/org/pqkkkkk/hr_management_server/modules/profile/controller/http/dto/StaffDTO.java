@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StaffDTO {
+    private String id;
     private String name;
     private String dateOfBirth;
     private String phoneNumber;
