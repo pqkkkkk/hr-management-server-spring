@@ -1,22 +1,9 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
-import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
-
 /**
- * Data Transfer Objects for Profile module.
- * <p> Each DTO includes methods to convert to and from entity objects
+ * Placeholder container for DTOs (kept for backward compatibility).
+ * Primary DTOs are now top-level classes in this package (e.g. `ProfileDTO`).
  */
 public class DTO {
-    public record ProfileDTO(
 
-    ){
-        public User toEntity(){
-            return User.builder()
-                    .build();
-        }
-        public static ProfileDTO fromEntity(User staff){
-            return new ProfileDTO(
-            );
-        }
-    }
 }
