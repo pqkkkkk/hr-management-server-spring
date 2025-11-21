@@ -1,6 +1,11 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
+
+import java.time.LocalDate;
 
 /**
  * Request DTOs for Profile module.
@@ -8,12 +13,37 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
  * <p> Each request DTO includes methods to convert to entity objects.
  */
 public class Request {
-    public record CreateStaffRequest(
-            String fullName
+    public record UpdateUserForHRRequest(
+            String fullName,
+            String email,
+            UserRole role,
+            UserStatus status,
+            UserGender gender,
+            String position,
+            LocalDate joinDate,
+            String identityCardNumber,
+            String phoneNumber,
+            LocalDate dateOfBirth,
+            String address,
+            String bankAccountNumber,
+            String bankName,
+            String departmentId
     ){
         public User toEntity(){
             return User.builder()
                     .fullName(fullName)
+                    .email(email)
+                    .role(role)
+                    .status(status)
+                    .gender(gender)
+                    .position(position)
+                    .joinDate(joinDate)
+                    .identityCardNumber(identityCardNumber)
+                    .phoneNumber(phoneNumber)
+                    .dateOfBirth(dateOfBirth)
+                    .address(address)
+                    .bankAccountNumber(bankAccountNumber)
+                    .bankName(bankName)
                     .build();
         }
     }

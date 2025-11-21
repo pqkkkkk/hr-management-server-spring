@@ -1,10 +1,23 @@
 package org.pqkkkkk.hr_management_server.modules.profile.infrastructure.dao.jpa_repository;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCriteria.ProfileFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProfileRepository extends JpaRepository<User, String> {
 
+    @Query(value = """
+            SELECT u FROM User u
+            WHERE (:#{#filter.fullName} IS NULL OR u.fullName LIKE %:#{#filter.fullName}%)
+            AND (:#{#filter.email} IS NULL OR u.email LIKE %:#{#filter.email}%)
+            AND (:#{#filter.role} IS NULL OR u.role = :#{#filter.role})
+            AND (:#{#filter.status} IS NULL OR u.status = :#{#filter.status})
+            AND (:#{#filter.departmentId} IS NULL OR u.department.id = :#{#filter.departmentId})
+            """)
+    public Page<User> getUsers(Pageable pageable, ProfileFilter filter);
 }
