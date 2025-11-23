@@ -17,10 +17,29 @@ public class Enums {
         INACTIVE
     }
     public enum UserPosition {
-
+        INTERN,
+        JUNIOR_DEVELOPER,
+        SENIOR_DEVELOPER,
+        TEAM_LEAD,
+        PROJECT_MANAGER,
+        HR_SPECIALIST,
+        SALES_REPRESENTATIVE,
+        MARKETING_MANAGER,
+        CUSTOMER_SUPPORT,
+        FINANCE_ANALYST,
+        OPERATIONS_MANAGER
     }
     public enum UserSortingField {
-        NAME,
-        ROLE
+        NAME("fullName"),
+        ROLE("role");
+
+        String fieldName;
+
+        UserSortingField(String fieldName) {
+            this.fieldName = fieldName;
+        }
+        public String getFieldName() {
+            return fieldName;
+        }
     }
 }

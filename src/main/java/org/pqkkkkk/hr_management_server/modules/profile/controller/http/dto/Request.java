@@ -1,7 +1,9 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Department;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 
@@ -19,7 +21,7 @@ public class Request {
             UserRole role,
             UserStatus status,
             UserGender gender,
-            String position,
+            UserPosition position,
             LocalDate joinDate,
             String identityCardNumber,
             String phoneNumber,
@@ -44,6 +46,7 @@ public class Request {
                     .address(address)
                     .bankAccountNumber(bankAccountNumber)
                     .bankName(bankName)
+                    .department(Department.builder().departmentId(departmentId).build())
                     .build();
         }
     }

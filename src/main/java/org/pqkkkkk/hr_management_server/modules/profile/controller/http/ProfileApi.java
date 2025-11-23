@@ -6,13 +6,14 @@ import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Resp
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCriteria.ProfileFilter;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQueryService;
-import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileService;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,18 +23,21 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/users")
 public class ProfileApi {
-    private final ProfileService profileService;
+    private final ProfileCommandService profileCommandService;
     private final ProfileQueryService profileQueryService;
 
-    public ProfileApi(ProfileService profileService, ProfileQueryService profileQueryService) {
-        this.profileService = profileService;
+    public ProfileApi(ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
+        this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
     }
 
     @PatchMapping("{userId}/for-hr")
-    public ResponseEntity<ApiResponse<UserDTO>> updateUserProfileForHR(@Valid @RequestBody UpdateUserForHRRequest request) {
+    public ResponseEntity<ApiResponse<UserDTO>> updateUserProfileForHR(@PathVariable String userId, @Valid @RequestBody UpdateUserForHRRequest request) {
 
-        User updatedUser = profileService.updateProfile(request.toEntity());
+        User newUserInfo = request.toEntity();
+        newUserInfo.setUserId(userId);
+        
+        User updatedUser = profileCommandService.updateProfile(newUserInfo);
 
         UserDTO userDTO = UserDTO.fromEntity(updatedUser);
 

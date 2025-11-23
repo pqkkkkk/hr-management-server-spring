@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.UuidGenerator;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 
@@ -54,7 +55,8 @@ public class User {
     UserGender gender;
 
     @Column(name = "position")
-    String position;
+    @Enumerated(EnumType.STRING)
+    UserPosition position;
 
     @Column(name = "join_date")
     LocalDate joinDate;
