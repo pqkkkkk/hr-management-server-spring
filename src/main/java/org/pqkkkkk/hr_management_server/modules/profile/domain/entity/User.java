@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.UuidGenerator;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,8 +46,17 @@ public class User {
     @Enumerated(EnumType.STRING)
     UserRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    UserStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    UserGender gender;
+
     @Column(name = "position")
-    String position;
+    @Enumerated(EnumType.STRING)
+    UserPosition position;
 
     @Column(name = "join_date")
     LocalDate joinDate;
@@ -75,5 +88,4 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "department_id")
     Department department;
-
 }

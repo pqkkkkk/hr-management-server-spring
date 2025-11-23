@@ -1,0 +1,2 @@
+ALTER TABLE user_table ADD COLUMN status VARCHAR(255);
+ALTER TABLE user_table ADD COLUMN gender VARCHAR(255);
