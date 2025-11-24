@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/users")
 public class ProfileApi {
     private final ProfileCommandService profileCommandService;
     private final ProfileQueryService profileQueryService;
@@ -30,7 +30,10 @@ public class ProfileApi {
         this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
     }
-
+    @GetMapping("/hello")
+    public String hello(){
+        return "Hello from Profile API!";
+    }
     @PatchMapping("{userId}/for-hr")
     public ResponseEntity<ApiResponse<UserDTO>> updateUserProfileForHR(@PathVariable String userId, @Valid @RequestBody UpdateUserForHRRequest request) {
 
