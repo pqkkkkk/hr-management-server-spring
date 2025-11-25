@@ -566,4 +566,30 @@ class ProfileQueryServiceImplIntegrationTest {
         assertNotNull(user.getUpdatedAt());
         assertNotNull(user.getDepartment());
     }
+    @Test
+    @DisplayName("getProfileById - valid userId - success")
+    void testGetProfileById_ValidUserId_Success() {
+        // Arrange: Thay userId này bằng userId thực tế có trong migration/test data
+        String validUserId = "u1a2b3c4-e5f6-7890-abcd-ef1234567890";        // Act
+        User user = profileQueryService.getProfileById(validUserId);
+        // Assert
+        assertNotNull(user);
+        assertEquals(validUserId, user.getUserId());
+    }
+
+    @Test
+    @DisplayName("getProfileById - invalid userId - should throw exception")
+    void testGetProfileById_InvalidUserId_ThrowsException() {
+        // Arrange
+        String invalidUserId = "not-exist-id";
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> profileQueryService.getProfileById(invalidUserId));
+    }
+
+    @Test
+    @DisplayName("getProfileById - null userId - should throw exception")
+    void testGetProfileById_NullUserId_ThrowsException() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> profileQueryService.getProfileById(null));
+    }
 }
