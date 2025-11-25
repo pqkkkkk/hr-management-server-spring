@@ -82,4 +82,16 @@ public class ProfileHRCommandService implements ProfileCommandService {
         return profileDao.updateProfile(existingUser);
     }
 
+    @Override
+    public User deactivateUser(String userId) {
+        User existingUser = profileDao.getProfileById(userId);
+
+        if (existingUser == null) {
+            throw new IllegalArgumentException("User with ID " + userId + " does not exist");
+        }
+
+        existingUser.setIsActive(true);
+
+        return profileDao.updateProfile(existingUser);
+    }
 }

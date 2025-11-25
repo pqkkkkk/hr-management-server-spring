@@ -30,10 +30,7 @@ public class ProfileApi {
         this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
     }
-    @GetMapping("/hello")
-    public String hello(){
-        return "Hello from Profile API!";
-    }
+
     @PatchMapping("{userId}/for-hr")
     public ResponseEntity<ApiResponse<UserDTO>> updateUserProfileForHR(@PathVariable String userId, @Valid @RequestBody UpdateUserForHRRequest request) {
 
@@ -61,4 +58,12 @@ public class ProfileApi {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @PatchMapping("{userId}/deactivate")
+    public ResponseEntity<ApiResponse<UserDTO>> deactivateUser(@PathVariable String userId) {
+        User updated = profileCommandService.deactivateUser(userId);
+        UserDTO dto = UserDTO.fromEntity(updated);
+        ApiResponse<UserDTO> response = new ApiResponse<>(dto, true, HttpStatus.OK.value(),
+                "User deactivated successfully.", null);
+        return ResponseEntity.ok(response);
+    }
 }

@@ -1,5 +1,6 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Department;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
@@ -47,6 +48,17 @@ public class Request {
                     .bankAccountNumber(bankAccountNumber)
                     .bankName(bankName)
                     .department(Department.builder().departmentId(departmentId).build())
+                    .build();
+        }
+    }
+
+    public record DepartmentRequest(
+            @NotBlank(message = "Department name is required")
+            String departmentName
+    ){
+        public Department toEntity(){
+            return Department.builder()
+                    .departmentName(departmentName)
                     .build();
         }
     }

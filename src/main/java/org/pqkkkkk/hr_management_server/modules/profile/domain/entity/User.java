@@ -88,4 +88,7 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "department_id")
     Department department;
+
+    @Column(name = "is_active")
+    Boolean isActive;
 }

@@ -1,5 +1,6 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Department;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
@@ -32,7 +33,8 @@ public class DTO {
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             String departmentId,
-            String departmentName
+            String departmentName,
+            boolean isActive
     ){
         public User toEntity(){
             return User.builder()
@@ -52,6 +54,7 @@ public class DTO {
                     .bankName(bankName)
                     .createdAt(createdAt)
                     .updatedAt(updatedAt)
+                    .isActive(isActive)
                     .build();
         }
         public static UserDTO fromEntity(User user){
@@ -73,7 +76,27 @@ public class DTO {
                     user.getCreatedAt(),
                     user.getUpdatedAt(),
                     user.getDepartment() != null ? user.getDepartment().getDepartmentId() : null,
-                    user.getDepartment() != null ? user.getDepartment().getDepartmentName() : null
+                    user.getDepartment() != null ? user.getDepartment().getDepartmentName() : null,
+                    user.getIsActive() != null ? user.getIsActive() : false
+            );
+        }
+    }
+
+    public record DepartmentDTO(
+            String departmentId,
+            String departmentName
+    ){
+        public Department toEntity(){
+            return Department.builder()
+                    .departmentId(departmentId)
+                    .departmentName(departmentName)
+                    .build();
+        }
+
+        public static DepartmentDTO fromEntity(Department department){
+            return new DepartmentDTO(
+                    department.getDepartmentId(),
+                    department.getDepartmentName()
             );
         }
     }
