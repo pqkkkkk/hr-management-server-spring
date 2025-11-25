@@ -3,6 +3,7 @@ package org.pqkkkkk.hr_management_server.modules.profile.domain.service.impl;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.dao.ProfileDao;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
