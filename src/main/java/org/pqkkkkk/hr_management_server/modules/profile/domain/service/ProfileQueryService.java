@@ -5,5 +5,6 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCrit
 import org.springframework.data.domain.Page;
 
 public interface ProfileQueryService {
-    public Page<User> getProfiles(ProfileFilter filter);
+    Page<User> getProfiles(ProfileFilter filter);
+    User getProfileById(String userId);
 }

@@ -15,9 +15,22 @@ public class ProfileQueryServiceImpl implements ProfileQueryService {
         this.profileDao = profileDao;
     }
 
+
     @Override
     public Page<User> getProfiles(ProfileFilter filter) {
         return profileDao.getProfiles(filter);
+    }
+
+    @Override
+    public User getProfileById(String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("userId must not be null or blank");
+        }
+        User user = profileDao.getProfileById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("User with id '" + userId + "' does not exist");
+        }
+        return user;
     }
 
 }
