@@ -2,6 +2,9 @@ package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Department;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+
+import jakarta.validation.constraints.*;
+
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
@@ -52,18 +55,30 @@ public class Request {
     }
 
     public record UpdateUserForEmployeeRequest(
+
+            @NotBlank(message = "Full name is required")
             String fullName,
+
+            @NotBlank(message = "Email is required")
+            @Email(message = "Invalid email format")
+            String email,
+
+            @NotBlank(message = "Phone number is required")
+            @Pattern(regexp = "^0\\d{9}$", message = "Phone number must be 10 digits starting with 0")
             String phoneNumber,
-            String address,
-            LocalDate dateOfBirth
+
+            @NotBlank(message = "Address is required")
+            String address
+
     ) {
         public User toEntity() {
             return User.builder()
                     .fullName(fullName)
+                    .email(email)
                     .phoneNumber(phoneNumber)
                     .address(address)
-                    .dateOfBirth(dateOfBirth)
                     .build();
         }
     }
+
 }
