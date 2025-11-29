@@ -7,6 +7,7 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCriteria.ProfileFilter;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQueryService;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class ProfileApi {
     private final ProfileCommandService profileCommandService;
     private final ProfileQueryService profileQueryService;
 
-    public ProfileApi(ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
+    public ProfileApi(@Qualifier("profileEmployeeCommandService") ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
         this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
     }
