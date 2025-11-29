@@ -59,4 +59,24 @@ public class ProfileApi {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserDTO>> getMyProfile(@PathVariable String userId) {
+
+        User user = profileQueryService.getProfileById(userId);
+
+        UserDTO userDTO = UserDTO.fromEntity(user);
+
+
+        ApiResponse<UserDTO> apiResponse = new ApiResponse<>(
+                userDTO,
+                true,
+                HttpStatus.OK.value(),
+                "Profile retrieved successfully.",
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
 }
