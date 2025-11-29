@@ -83,14 +83,23 @@ public class ProfileHRCommandService implements ProfileCommandService {
     }
 
     @Override
+    @Transactional
     public User deactivateUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
+
         User existingUser = profileDao.getProfileById(userId);
 
         if (existingUser == null) {
             throw new IllegalArgumentException("User with ID " + userId + " does not exist");
         }
 
-        existingUser.setIsActive(true);
+        if (existingUser.getIsActive() != null && !existingUser.getIsActive()) {
+            throw new IllegalArgumentException("User with ID " + userId + " is already deactivated");
+        }
+
+        existingUser.setIsActive(false);
 
         return profileDao.updateProfile(existingUser);
     }
