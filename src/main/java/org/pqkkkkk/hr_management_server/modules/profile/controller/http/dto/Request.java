@@ -50,4 +50,20 @@ public class Request {
                     .build();
         }
     }
+
+    public record UpdateUserForEmployeeRequest(
+            String fullName,
+            String phoneNumber,
+            String address,
+            LocalDate dateOfBirth
+    ) {
+        public User toEntity() {
+            return User.builder()
+                    .fullName(fullName)
+                    .phoneNumber(phoneNumber)
+                    .address(address)
+                    .dateOfBirth(dateOfBirth)
+                    .build();
+        }
+    }
 }
