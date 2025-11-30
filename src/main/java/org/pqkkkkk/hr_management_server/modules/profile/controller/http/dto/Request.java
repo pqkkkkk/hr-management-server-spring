@@ -56,28 +56,34 @@ public class Request {
 
     public record UpdateUserForEmployeeRequest(
 
-            @NotBlank(message = "Full name is required")
             String fullName,
 
-            @NotBlank(message = "Email is required")
             @Email(message = "Invalid email format")
             String email,
 
-            @NotBlank(message = "Phone number is required")
             @Pattern(regexp = "^0\\d{9}$", message = "Phone number must be 10 digits starting with 0")
             String phoneNumber,
 
-            @NotBlank(message = "Address is required")
             String address
 
     ) {
         public User toEntity() {
-            return User.builder()
-                    .fullName(fullName)
-                    .email(email)
-                    .phoneNumber(phoneNumber)
-                    .address(address)
-                    .build();
+            User.UserBuilder builder = User.builder();
+            
+            if (fullName != null && !fullName.isBlank()) {
+                builder.fullName(fullName);
+            }
+            if (email != null && !email.isBlank()) {
+                builder.email(email);
+            }
+            if (phoneNumber != null && !phoneNumber.isBlank()) {
+                builder.phoneNumber(phoneNumber);
+            }
+            if (address != null && !address.isBlank()) {
+                builder.address(address);
+            }
+            
+            return builder.build();
         }
     }
 
