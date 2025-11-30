@@ -2,6 +2,9 @@ package org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Department;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+
+import jakarta.validation.constraints.*;
+
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
@@ -57,4 +60,37 @@ public class Request {
             SupportedFileFormat fileFormat,
             ProfileFilter filter
     ){}
+    public record UpdateUserForEmployeeRequest(
+
+            String fullName,
+
+            @Email(message = "Invalid email format")
+            String email,
+
+            @Pattern(regexp = "^0\\d{9}$", message = "Phone number must be 10 digits starting with 0")
+            String phoneNumber,
+
+            String address
+
+    ) {
+        public User toEntity() {
+            User.UserBuilder builder = User.builder();
+            
+            if (fullName != null && !fullName.isBlank()) {
+                builder.fullName(fullName);
+            }
+            if (email != null && !email.isBlank()) {
+                builder.email(email);
+            }
+            if (phoneNumber != null && !phoneNumber.isBlank()) {
+                builder.phoneNumber(phoneNumber);
+            }
+            if (address != null && !address.isBlank()) {
+                builder.address(address);
+            }
+            
+            return builder.build();
+        }
+    }
+
 }
