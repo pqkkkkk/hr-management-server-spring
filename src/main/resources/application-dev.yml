@@ -22,3 +22,9 @@ logging:
     level:
         root: INFO
         '[org.springframework.security]': DEBUG
+
+# Google Cloud Storage Configuration
+gcs:
+    bucket-name: ${GCS_BUCKET_NAME:hr-management-bucket}
+    project-id: ${GCS_PROJECT_ID:magnetic-clone-478711-i6}
+    credentials-path: ${GCS_CREDENTIALS_PATH:classpath:gcs-credentials.json}

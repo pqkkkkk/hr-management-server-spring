@@ -1,6 +1,8 @@
 package org.pqkkkkk.hr_management_server.modules.profile.controller.http;
 
+import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.DTO.ExportProfilesDTO;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.DTO.UserDTO;
+import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Request.ExportProfilesRequest;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Request.UpdateUserForHRRequest;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Request.UpdateUserForEmployeeRequest;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Response.ApiResponse;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,7 +32,7 @@ public class ProfileApi {
     private final ProfileCommandService profileCommandService;
     private final ProfileQueryService profileQueryService;
 
-    public ProfileApi(@Qualifier("profileEmployeeCommandService") ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
+    public ProfileApi(@Qualifier("profileHRCommandService") ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
         this.profileCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
     }
@@ -81,6 +85,28 @@ public class ProfileApi {
 
         ApiResponse<Page<UserDTO>> apiResponse = new ApiResponse<>(userDTOs, true,
                 HttpStatus.OK.value(), "Profiles retrieved successfully.", null);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+    @PostMapping("/export")
+    public ResponseEntity<ApiResponse<ExportProfilesDTO>> exportProfiles(@Valid @RequestBody ExportProfilesRequest request){
+        String fileUrl = profileQueryService.exportProfiles(request.filter(), request.fileFormat());
+
+        ExportProfilesDTO exportProfilesDTO = new ExportProfilesDTO(fileUrl);
+
+        ApiResponse<ExportProfilesDTO> apiResponse = new ApiResponse<>(exportProfilesDTO, true,
+                HttpStatus.OK.value(), "Profiles exported successfully.", null);
+
+        return ResponseEntity.ok(apiResponse);
+    }
+    @PutMapping("/{userId}/deactivate")
+    public ResponseEntity<ApiResponse<UserDTO>> deactivateProfile(@PathVariable String userId){
+        User deactivatedUser = profileCommandService.deactivateUser(userId);
+
+        UserDTO userDTO = UserDTO.fromEntity(deactivatedUser);
+
+        ApiResponse<UserDTO> apiResponse = new ApiResponse<>(userDTO, true, HttpStatus.OK.value(),
+                "Profile deactivated successfully.", null);
 
         return ResponseEntity.ok(apiResponse);
     }

@@ -2,6 +2,7 @@ package org.pqkkkkk.hr_management_server.modules.profile.domain.service.impl;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.dao.ProfileDao;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +81,24 @@ public class ProfileHRCommandService implements ProfileCommandService {
         existingUser = updateUserFields(existingUser, user);
 
         return profileDao.updateProfile(existingUser);
+    }
+
+    @Override
+    @Transactional
+    public User deactivateUser(String userId) {
+        User user = profileDao.getProfileById(userId);
+
+        if (user == null) {
+            throw new IllegalArgumentException("User with ID " + userId + " does not exist");
+        }
+
+        if(user.getStatus() == UserStatus.INACTIVE) {
+            throw new IllegalArgumentException("User is already inactive");
+        }
+
+        user.setStatus(UserStatus.INACTIVE);
+
+        return profileDao.updateProfile(user);
     }
 
 }

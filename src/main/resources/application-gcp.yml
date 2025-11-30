@@ -3,8 +3,8 @@ spring:
         name: hr-management-server
     datasource:
         url: jdbc:postgresql:///${DATABASE_NAME}?cloudSqlInstance=${CLOUD_SQL_INSTANCE}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
-        username: ${DATABASE_USERNAME:postgres}
-        password: ${DATABASE_PASSWORD:pqkiet854A@}
+        username: ${DATABASE_USERNAME}
+        password: ${DATABASE_PASSWORD}
         driver-class-name: org.postgresql.Driver
     jpa:
         hibernate.ddl-auto: validate
@@ -23,3 +23,10 @@ logging:
     level:
         root: INFO
         '[org.springframework.security]': DEBUG
+
+# Google Cloud Storage Configuration
+# When running on Cloud Run, uses Application Default Credentials automatically
+gcs:
+    bucket-name: ${GCS_BUCKET_NAME:hr-management-bucket}
+    project-id: ${GCS_PROJECT_ID:magnetic-clone-478711-i6}
+    credentials-path: ${GCS_CREDENTIALS_PATH:}

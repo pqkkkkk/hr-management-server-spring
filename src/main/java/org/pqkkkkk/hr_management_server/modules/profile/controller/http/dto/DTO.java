@@ -77,4 +77,7 @@ public class DTO {
             );
         }
     }
+    public record ExportProfilesDTO(
+            String fileUrl
+    ){}
 }

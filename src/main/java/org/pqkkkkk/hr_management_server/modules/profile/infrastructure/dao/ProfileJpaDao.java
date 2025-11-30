@@ -1,5 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.profile.infrastructure.dao;
 
+import java.util.List;
+
 import org.pqkkkkk.hr_management_server.modules.profile.domain.dao.ProfileDao;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserSortingField;
@@ -50,6 +52,11 @@ public class ProfileJpaDao implements ProfileDao {
     @Override
     public User getProfileById(String userId) {
         return profileRepository.findById(userId).orElse(null);
+    }
+
+    @Override
+    public List<User> getAllProfiles(ProfileFilter filter) {
+        return profileRepository.getAllUsers(filter);
     }
 
 }

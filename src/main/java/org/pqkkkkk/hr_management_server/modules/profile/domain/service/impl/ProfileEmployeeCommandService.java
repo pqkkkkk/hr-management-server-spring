@@ -49,4 +49,9 @@ public class ProfileEmployeeCommandService implements ProfileCommandService {
 		// Gọi DAO để lưu
 		return profileDao.updateProfile(existing);
 	}
+
+	@Override
+	public User deactivateUser(String userId) {
+		throw new UnsupportedOperationException("Employee cannot deactivate user");
+	}
 }
