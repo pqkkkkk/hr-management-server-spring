@@ -8,14 +8,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Profile("test")
 @Slf4j
 public class LocalStorageService implements StorageService {
 
