@@ -56,8 +56,8 @@ class ProfileEmployeeCommandServiceIntegrationTest {
         // Assert
         org.junit.jupiter.api.Assertions.assertNotNull(result);
         org.junit.jupiter.api.Assertions.assertEquals("updatedemail@company.com", result.getEmail());
-        // Các field khác không thay đổi
-        org.junit.jupiter.api.Assertions.assertEquals("John Doe", result.getFullName());
+        org.junit.jupiter.api.Assertions.assertEquals("Nguyen Van An", result.getFullName());
+        org.junit.jupiter.api.Assertions.assertEquals("0901234567", result.getPhoneNumber());
     }
     
     @Test
@@ -75,6 +75,63 @@ class ProfileEmployeeCommandServiceIntegrationTest {
         // Assert
         org.junit.jupiter.api.Assertions.assertNotNull(result);
         org.junit.jupiter.api.Assertions.assertEquals("0888777666", result.getPhoneNumber());
+        org.junit.jupiter.api.Assertions.assertEquals("Nguyen Van An", result.getFullName());
+        org.junit.jupiter.api.Assertions.assertEquals("nguyenvanan@company.com", result.getEmail());
+    }
+    
+    @Test
+    @DisplayName("updateProfile - partial update (only address) - success")
+    void testUpdateProfile_OnlyAddress_Success() {
+        // Arrange - sử dụng sample user từ Flyway: Nguyen Van An
+        String userId = "u1a2b3c4-e5f6-7890-abcd-ef1234567890";
+        User update = new User();
+        update.setUserId(userId);
+        update.setAddress("New Address for Testing");
+
+        // Act
+        User result = profileCommandService.updateProfile(update);
+
+        // Assert
+        org.junit.jupiter.api.Assertions.assertNotNull(result);
+        org.junit.jupiter.api.Assertions.assertEquals("New Address for Testing", result.getAddress());
+        // Các field khác không thay đổi
+        org.junit.jupiter.api.Assertions.assertEquals("Nguyen Van An", result.getFullName());
+        org.junit.jupiter.api.Assertions.assertEquals("nguyenvanan@company.com", result.getEmail());
+        org.junit.jupiter.api.Assertions.assertEquals("0901234567", result.getPhoneNumber());
+    }
+    
+    @Test
+    @DisplayName("updateProfile - partial update (email and phone) - success")
+    void testUpdateProfile_EmailAndPhone_Success() {
+        // Arrange
+        String userId = "u1a2b3c4-e5f6-7890-abcd-ef1234567890";
+        User update = new User();
+        update.setUserId(userId);
+        update.setEmail("multi.update@company.com");
+        update.setPhoneNumber("0777666555");
+
+        // Act
+        User result = profileCommandService.updateProfile(update);
+
+        // Assert
+        org.junit.jupiter.api.Assertions.assertNotNull(result);
+        org.junit.jupiter.api.Assertions.assertEquals("multi.update@company.com", result.getEmail());
+        org.junit.jupiter.api.Assertions.assertEquals("0777666555", result.getPhoneNumber());
+        org.junit.jupiter.api.Assertions.assertEquals("Nguyen Van An", result.getFullName());
+        org.junit.jupiter.api.Assertions.assertEquals("123 Le Loi Street, District 1, Ho Chi Minh City", result.getAddress());
+    }
+    
+    @Test
+    @DisplayName("updateProfile - missing userId - should throw exception")
+    void testUpdateProfile_MissingUserId_ThrowsException() {
+        // Arrange
+        User update = new User();
+        update.setEmail("test@example.com");
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, 
+            () -> profileCommandService.updateProfile(update),
+            "UserId is required");
     }
     @Test
     @DisplayName("updateProfile - null user - should throw exception")
