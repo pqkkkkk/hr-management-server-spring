@@ -33,3 +33,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Google Cloud Storage Credentials ###
+src/main/resources/gcs-credentials.json
+*-credentials.json
+*.json
+!pom.xml
+!package.json
+!package-lock.json

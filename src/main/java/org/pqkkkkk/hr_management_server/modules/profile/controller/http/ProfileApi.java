@@ -2,6 +2,7 @@ package org.pqkkkkk.hr_management_server.modules.profile.controller.http;
 
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.DTO.UserDTO;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Request.UpdateUserForHRRequest;
+import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Request.UpdateUserForEmployeeRequest;
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Response.ApiResponse;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCriteria.ProfileFilter;
@@ -46,6 +47,31 @@ public class ProfileApi {
                                  "User profile updated successfully.", null);
         return ResponseEntity.ok(apiResponse);
     }
+
+
+    @PatchMapping("{userId}/for-employee")
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfileForEmployee(
+            @PathVariable String userId,
+            @Valid @RequestBody UpdateUserForEmployeeRequest request) {
+
+        User userEntity = request.toEntity();
+        userEntity.setUserId(userId);
+
+        User updatedUser = profileCommandService.updateProfile(userEntity);
+
+        UserDTO userDTO = UserDTO.fromEntity(updatedUser);
+        ApiResponse<UserDTO> apiResponse = new ApiResponse<>(
+                userDTO,
+                true,
+                HttpStatus.OK.value(),
+                "Profile updated successfully.",
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserDTO>>> getProfiles(@Valid @ModelAttribute ProfileFilter filter){
         Page<User> users = profileQueryService.getProfiles(filter);
@@ -58,5 +84,25 @@ public class ProfileApi {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserDTO>> getMyProfile(@PathVariable String userId) {
+
+        User user = profileQueryService.getProfileById(userId);
+
+        UserDTO userDTO = UserDTO.fromEntity(user);
+
+
+        ApiResponse<UserDTO> apiResponse = new ApiResponse<>(
+                userDTO,
+                true,
+                HttpStatus.OK.value(),
+                "Profile retrieved successfully.",
+                null
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 
 }
