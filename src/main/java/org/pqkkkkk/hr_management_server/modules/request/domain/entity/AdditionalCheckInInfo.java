@@ -1,0 +1,42 @@
+package org.pqkkkkk.hr_management_server.modules.request.domain.entity;
+
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+@Entity
+@Table(name = "additional_checkin_info_table")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+public class AdditionalCheckInInfo {
+    
+    @Id
+    @Column(name = "request_id")
+    String requestId;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "request_id")
+    Request request;
+    
+    @Column(name = "desired_check_in_time", nullable = false)
+    LocalDateTime desiredCheckInTime;
+    
+    @Column(name = "current_check_in_time", nullable = false)
+    LocalDateTime currentCheckInTime;
+}
