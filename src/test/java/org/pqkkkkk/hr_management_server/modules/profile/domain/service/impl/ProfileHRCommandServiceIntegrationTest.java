@@ -409,4 +409,91 @@ class ProfileHRCommandServiceIntegrationTest {
         assertEquals(originalFullName, updatedUser.getFullName());
         assertEquals(originalEmail, updatedUser.getEmail());
     }
+
+    // ========== Integration Tests for deactivateUser ==========
+
+    @Test
+    @DisplayName("Should successfully deactivate an active user")
+    void testDeactivateUser_WithActiveUser_Success() {
+        // Arrange
+        // Ensure user is active first
+        User activateRequest = User.builder()
+                .userId(testUserId)
+                .status(UserStatus.ACTIVE)
+                .build();
+        profileHRCommandService.updateProfile(activateRequest);
+        
+        User userBeforeDeactivation = profileDao.getProfileById(testUserId);
+        assertEquals(UserStatus.ACTIVE, userBeforeDeactivation.getStatus());
+
+        // Act
+        User deactivatedUser = profileHRCommandService.deactivateUser(testUserId);
+
+        // Assert
+        assertNotNull(deactivatedUser);
+        assertEquals(UserStatus.INACTIVE, deactivatedUser.getStatus());
+        assertEquals(testUserId, deactivatedUser.getUserId());
+        
+        // Verify all other fields remain unchanged
+        assertEquals(userBeforeDeactivation.getFullName(), deactivatedUser.getFullName());
+        assertEquals(userBeforeDeactivation.getEmail(), deactivatedUser.getEmail());
+        assertEquals(userBeforeDeactivation.getRole(), deactivatedUser.getRole());
+        assertEquals(userBeforeDeactivation.getPhoneNumber(), deactivatedUser.getPhoneNumber());
+        
+        // Verify persistence
+        User fetchedUser = profileDao.getProfileById(testUserId);
+        assertEquals(UserStatus.INACTIVE, fetchedUser.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when deactivating non-existent user")
+    void testDeactivateUser_WithNonExistentUserId_ThrowsException() {
+        // Arrange
+        String nonExistentUserId = "non-existent-user-id";
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> profileHRCommandService.deactivateUser(nonExistentUserId)
+        );
+        
+        assertEquals("User with ID " + nonExistentUserId + " does not exist", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when user is already inactive")
+    void testDeactivateUser_WithInactiveUser_ThrowsException() {
+        // Arrange
+        // First, ensure the user is inactive
+        User deactivateRequest = User.builder()
+                .userId(testUserId)
+                .status(UserStatus.INACTIVE)
+                .build();
+        profileHRCommandService.updateProfile(deactivateRequest);
+        
+        User userBeforeTest = profileDao.getProfileById(testUserId);
+        assertEquals(UserStatus.INACTIVE, userBeforeTest.getStatus());
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> profileHRCommandService.deactivateUser(testUserId)
+        );
+        
+        assertEquals("User is already inactive", exception.getMessage());
+        
+        // Verify status remains unchanged
+        User fetchedUser = profileDao.getProfileById(testUserId);
+        assertEquals(UserStatus.INACTIVE, fetchedUser.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should successfully deactivate user with null userId should throw exception")
+    void testDeactivateUser_WithNullUserId_ThrowsException() {
+        // Act & Assert
+        assertThrows(
+                Exception.class,
+                () -> profileHRCommandService.deactivateUser(null)
+        );
+    }
 }

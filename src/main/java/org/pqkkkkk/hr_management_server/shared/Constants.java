@@ -10,5 +10,26 @@ public class Constants {
         ASC,
         DESC
     }
+
+    public enum SupportedFileFormat {
+        EXCEL(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        PDF(".pdf", "application/pdf");
+
+        private final String fileExtension;
+        private final String contentType;
+
+        SupportedFileFormat(String fileExtension, String contentType) {
+            this.fileExtension = fileExtension;
+            this.contentType = contentType;
+        }
+
+        public String getFileExtension() {
+            return fileExtension;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+    }
     
 }

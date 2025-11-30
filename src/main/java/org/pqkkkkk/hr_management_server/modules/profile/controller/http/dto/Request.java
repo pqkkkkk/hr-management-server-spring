@@ -6,6 +6,8 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.User
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserPosition;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.filter.FilterCriteria.ProfileFilter;
+import org.pqkkkkk.hr_management_server.shared.Constants.SupportedFileFormat;
 
 import java.time.LocalDate;
 
@@ -50,4 +52,9 @@ public class Request {
                     .build();
         }
     }
+
+    public record ExportProfilesRequest(
+            SupportedFileFormat fileFormat,
+            ProfileFilter filter
+    ){}
 }
