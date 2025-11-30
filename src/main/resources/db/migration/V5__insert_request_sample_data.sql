@@ -11,16 +11,16 @@ INSERT INTO request_table (
     (SELECT user_id FROM user_table WHERE role = 'EMPLOYEE' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
-    CURRENT_TIMESTAMP + CAST('-2 hours' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-1 days' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-2 hours' AS INTERVAL)
+    CURRENT_TIMESTAMP - INTERVAL '2' HOUR,
+    CURRENT_TIMESTAMP - INTERVAL '1' DAY,
+    CURRENT_TIMESTAMP - INTERVAL '2' HOUR
 );
 
 INSERT INTO additional_checkin_info_table (request_id, desired_check_in_time, current_check_in_time)
 VALUES (
     'req-001',
-    CURRENT_TIMESTAMP + CAST('-1 days' AS INTERVAL) + CAST('8 hours' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-1 days' AS INTERVAL) + CAST('9 hours 30 minutes' AS INTERVAL)
+    CURRENT_TIMESTAMP - INTERVAL '1' DAY + INTERVAL '8' HOUR,
+    CURRENT_TIMESTAMP - INTERVAL '1' DAY + INTERVAL '9' HOUR
 );
 
 -- Sample CHECK_OUT request (PENDING)
@@ -38,8 +38,8 @@ INSERT INTO request_table (
 INSERT INTO additional_checkout_info_table (request_id, desired_check_out_time, current_check_out_time)
 VALUES (
     'req-002',
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('17 hours' AS INTERVAL),
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('15 hours 30 minutes' AS INTERVAL)
+    CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '17' HOUR,
+    CAST(CURRENT_DATE AS TIMESTAMP) + INTERVAL '15' HOUR
 );
 
 -- Sample TIMESHEET request (APPROVED)
@@ -53,9 +53,9 @@ INSERT INTO request_table (
     (SELECT user_id FROM user_table WHERE role = 'EMPLOYEE' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
-    CURRENT_TIMESTAMP + CAST('-1 hours' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-1 days' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-1 hours' AS INTERVAL)
+    CURRENT_TIMESTAMP - INTERVAL '1' HOUR,
+    CURRENT_TIMESTAMP - INTERVAL '1' DAY,
+    CURRENT_TIMESTAMP - INTERVAL '1' HOUR
 );
 
 INSERT INTO additional_timesheet_info_table (
@@ -63,11 +63,11 @@ INSERT INTO additional_timesheet_info_table (
     desired_check_out_time, current_check_out_time, target_date
 ) VALUES (
     'req-003',
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('-1 days' AS INTERVAL) + CAST('8 hours' AS INTERVAL),
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('-1 days' AS INTERVAL) + CAST('8 hours 15 minutes' AS INTERVAL),
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('-1 days' AS INTERVAL) + CAST('17 hours' AS INTERVAL),
-    CAST(CURRENT_DATE AS TIMESTAMP) + CAST('-1 days' AS INTERVAL) + CAST('17 hours 30 minutes' AS INTERVAL),
-    CURRENT_DATE + CAST('-1 days' AS INTERVAL)
+    CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL '1' DAY + INTERVAL '8' HOUR,
+    CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL '1' DAY + INTERVAL '8' HOUR,
+    CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL '1' DAY + INTERVAL '17' HOUR,
+    CAST(CURRENT_DATE AS TIMESTAMP) - INTERVAL '1' DAY + INTERVAL '17' HOUR,
+    CURRENT_DATE - INTERVAL '1' DAY
 );
 
 -- Sample LEAVE request (PENDING) - 2.5 days
@@ -86,9 +86,9 @@ INSERT INTO additional_leave_info_table (request_id, leave_type, total_days)
 VALUES ('req-004', 'ANNUAL', 2.5);
 
 INSERT INTO leave_dates_table (leave_date_id, request_id, date, shift) VALUES
-    ('ld-001', 'req-004', CURRENT_DATE + CAST('7 days' AS INTERVAL), 'FULL_DAY'),
-    ('ld-002', 'req-004', CURRENT_DATE + CAST('8 days' AS INTERVAL), 'FULL_DAY'),
-    ('ld-003', 'req-004', CURRENT_DATE + CAST('9 days' AS INTERVAL), 'MORNING');
+    ('ld-001', 'req-004', CURRENT_DATE + INTERVAL '7' DAY, 'FULL_DAY'),
+    ('ld-002', 'req-004', CURRENT_DATE + INTERVAL '8' DAY, 'FULL_DAY'),
+    ('ld-003', 'req-004', CURRENT_DATE + INTERVAL '9' DAY, 'MORNING');
 
 -- Sample LEAVE request (REJECTED)
 INSERT INTO request_table (
@@ -102,9 +102,9 @@ INSERT INTO request_table (
     (SELECT user_id FROM user_table WHERE role = 'EMPLOYEE' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'HR' LIMIT 1),
-    CURRENT_TIMESTAMP + CAST('-30 minutes' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-2 hours' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-30 minutes' AS INTERVAL)
+    CURRENT_TIMESTAMP - INTERVAL '30' MINUTE,
+    CURRENT_TIMESTAMP - INTERVAL '2' HOUR,
+    CURRENT_TIMESTAMP - INTERVAL '30' MINUTE
 );
 
 INSERT INTO additional_leave_info_table (request_id, leave_type, total_days)
@@ -112,7 +112,7 @@ VALUES ('req-005', 'SICK', 2.0);
 
 INSERT INTO leave_dates_table (leave_date_id, request_id, date, shift) VALUES
     ('ld-004', 'req-005', CURRENT_DATE, 'FULL_DAY'),
-    ('ld-005', 'req-005', CURRENT_DATE + CAST('1 days' AS INTERVAL), 'FULL_DAY');
+    ('ld-005', 'req-005', CURRENT_DATE + INTERVAL '1' DAY, 'FULL_DAY');
 
 -- Sample WFH request (APPROVED) - 3 days
 INSERT INTO request_table (
@@ -125,10 +125,10 @@ INSERT INTO request_table (
     (SELECT user_id FROM user_table WHERE role = 'EMPLOYEE' LIMIT 1 OFFSET 1),
     (SELECT user_id FROM user_table WHERE role = 'MANAGER' LIMIT 1),
     (SELECT user_id FROM user_table WHERE role = 'MANAGER' LIMIT 1),
-    CURRENT_TIMESTAMP + CAST('-3 hours' AS INTERVAL),
+    CURRENT_TIMESTAMP - INTERVAL '3' HOUR,
     'https://storage.example.com/attachments/renovation-schedule.pdf',
-    CURRENT_TIMESTAMP + CAST('-2 days' AS INTERVAL),
-    CURRENT_TIMESTAMP + CAST('-3 hours' AS INTERVAL)
+    CURRENT_TIMESTAMP - INTERVAL '2' DAY,
+    CURRENT_TIMESTAMP - INTERVAL '3' HOUR
 );
 
 INSERT INTO additional_wfh_info_table (request_id, wfh_commitment, work_location, total_days)
@@ -140,9 +140,9 @@ VALUES (
 );
 
 INSERT INTO wfh_dates_table (wfh_date_id, request_id, date, shift) VALUES
-    ('wfh-001', 'req-006', CURRENT_DATE + CAST('3 days' AS INTERVAL), 'FULL_DAY'),
-    ('wfh-002', 'req-006', CURRENT_DATE + CAST('4 days' AS INTERVAL), 'FULL_DAY'),
-    ('wfh-003', 'req-006', CURRENT_DATE + CAST('5 days' AS INTERVAL), 'FULL_DAY');
+    ('wfh-001', 'req-006', CURRENT_DATE + INTERVAL '3' DAY, 'FULL_DAY'),
+    ('wfh-002', 'req-006', CURRENT_DATE + INTERVAL '4' DAY, 'FULL_DAY'),
+    ('wfh-003', 'req-006', CURRENT_DATE + INTERVAL '5' DAY, 'FULL_DAY');
 
 -- Sample WFH request (PENDING) - Half day
 INSERT INTO request_table (
@@ -165,7 +165,7 @@ VALUES (
 );
 
 INSERT INTO wfh_dates_table (wfh_date_id, request_id, date, shift) VALUES
-    ('wfh-004', 'req-007', CURRENT_DATE + CAST('1 days' AS INTERVAL), 'AFTERNOON');
+    ('wfh-004', 'req-007', CURRENT_DATE + INTERVAL '1' DAY, 'AFTERNOON');
 
 -- Add comments about sample data
 COMMENT ON TABLE request_table IS 'Sample data includes various request types and statuses for testing';
