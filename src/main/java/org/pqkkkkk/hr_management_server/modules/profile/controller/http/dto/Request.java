@@ -57,6 +57,7 @@ public class Request {
     }
 
     public record ExportProfilesRequest(
+            @NotNull(message = "File format is required")
             SupportedFileFormat fileFormat,
             ProfileFilter filter
     ){}

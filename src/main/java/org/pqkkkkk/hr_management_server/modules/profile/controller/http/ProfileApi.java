@@ -29,12 +29,16 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/users")
 public class ProfileApi {
-    private final ProfileCommandService profileCommandService;
+    private final ProfileCommandService profileHRCommandService;
+    private final ProfileCommandService profileEmployeeCommandService;
     private final ProfileQueryService profileQueryService;
 
-    public ProfileApi(@Qualifier("profileHRCommandService") ProfileCommandService profileCommandService, ProfileQueryService profileQueryService) {
-        this.profileCommandService = profileCommandService;
+    public ProfileApi(@Qualifier("profileHRCommandService") ProfileCommandService profileCommandService,
+                      @Qualifier("profileEmployeeCommandService") ProfileCommandService profileEmployeeCommandService,
+                    ProfileQueryService profileQueryService) {
+        this.profileHRCommandService = profileCommandService;
         this.profileQueryService = profileQueryService;
+        this.profileEmployeeCommandService = profileEmployeeCommandService;
     }
 
     @PatchMapping("{userId}/for-hr")
@@ -43,7 +47,7 @@ public class ProfileApi {
         User newUserInfo = request.toEntity();
         newUserInfo.setUserId(userId);
         
-        User updatedUser = profileCommandService.updateProfile(newUserInfo);
+        User updatedUser = profileHRCommandService.updateProfile(newUserInfo);
 
         UserDTO userDTO = UserDTO.fromEntity(updatedUser);
 
@@ -61,7 +65,7 @@ public class ProfileApi {
         User userEntity = request.toEntity();
         userEntity.setUserId(userId);
 
-        User updatedUser = profileCommandService.updateProfile(userEntity);
+        User updatedUser = profileEmployeeCommandService.updateProfile(userEntity);
 
         UserDTO userDTO = UserDTO.fromEntity(updatedUser);
         ApiResponse<UserDTO> apiResponse = new ApiResponse<>(
@@ -101,7 +105,7 @@ public class ProfileApi {
     }
     @PutMapping("/{userId}/deactivate")
     public ResponseEntity<ApiResponse<UserDTO>> deactivateProfile(@PathVariable String userId){
-        User deactivatedUser = profileCommandService.deactivateUser(userId);
+        User deactivatedUser = profileHRCommandService.deactivateUser(userId);
 
         UserDTO userDTO = UserDTO.fromEntity(deactivatedUser);
 
