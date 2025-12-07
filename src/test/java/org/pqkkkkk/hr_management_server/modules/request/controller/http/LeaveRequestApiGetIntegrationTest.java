@@ -28,8 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("LeaveRequestApi Integration Tests")
-class LeaveRequestApiIntegrationTest {
+@DisplayName("LeaveRequestApi GET /my-requests Integration Tests")
+class LeaveRequestApiGetIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -189,7 +189,6 @@ class LeaveRequestApiIntegrationTest {
     }
 
     // ---------------------------
-    // ---------------------------
     // PAGINATION TESTS
     // ---------------------------
 
@@ -239,6 +238,7 @@ class LeaveRequestApiIntegrationTest {
             .andExpect(jsonPath("$.data.totalElements").value(4))
             .andExpect(jsonPath("$.data.totalPages").value(2));
     }
+
     @Test
     @DisplayName("Should return 401 Unauthorized when no authentication provided")
     void getMyLeaveRequests_unauthorized() throws Exception {
@@ -305,6 +305,7 @@ class LeaveRequestApiIntegrationTest {
             .andExpect(jsonPath("$.data.content[0].createdAt").exists())
             .andExpect(jsonPath("$.data.content[1].createdAt").exists());
     }
+
     // ---------------------------
     // HELPER METHODS
     // ---------------------------
