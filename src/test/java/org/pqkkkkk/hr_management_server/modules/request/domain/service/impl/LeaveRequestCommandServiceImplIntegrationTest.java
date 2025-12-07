@@ -196,7 +196,38 @@ class LeaveRequestCommandServiceImplIntegrationTest {
         }
 
         @Test
-        @DisplayName("TC4: Multiple non-overlapping requests from same employee")
+        @DisplayName("TC4: Create leave request with attachment URL")
+        void testCreateLeaveRequest_WithAttachmentUrl_PersistedCorrectly() {
+            // Arrange
+            LocalDate startDate = LocalDate.now().plusDays(5);
+            LocalDate endDate = LocalDate.now().plusDays(7);
+            String attachmentUrl = "https://example.com/documents/medical-certificate.pdf";
+            CreateLeaveRequestCommand command = CreateLeaveRequestCommand.builder()
+                    .employeeId(testEmployeeId)
+                    .leaveType("SICK")
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .reason("Medical leave with certificate")
+                    .attachmentUrl(attachmentUrl)
+                    .build();
+
+            // Act
+            Request result = leaveRequestCommandService.createLeaveRequest(command);
+
+            // Assert - Return value verification
+            assertNotNull(result, "Result should not be null");
+            assertEquals(attachmentUrl, result.getAttachmentUrl(), "Attachment URL should be saved");
+
+            // Assert - H2 Database persistence verification
+            Request persisted = requestRepository.findById(result.getRequestId())
+                    .orElse(null);
+            assertNotNull(persisted, "Request should be persisted in H2 database");
+            assertEquals(attachmentUrl, persisted.getAttachmentUrl(), "Attachment URL should be persisted in database");
+            assertEquals("Medical leave with certificate", persisted.getUserReason());
+        }
+
+        @Test
+        @DisplayName("TC5: Multiple non-overlapping requests from same employee")
         void testCreateLeaveRequest_NonOverlapping_BothPersisted() {
             // Arrange
             LocalDate startDate1 = LocalDate.now().plusDays(5);
