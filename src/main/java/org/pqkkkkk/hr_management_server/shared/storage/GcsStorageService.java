@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!test")
+@Profile({"dev", "gcp"})
 public class GcsStorageService implements StorageService {
 
     private final Storage storage;

@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:13
+    container_name: hr-management-server-postgres
+    environment:
+      - POSTGRES_DB=hr_management_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pqkiet854A@
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - hr-management-server-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+  hr-management-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr-management-server
+    ports:
+      - "8080:8080"
+    networks:
+      - hr-management-server-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/hr_management_db
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=pqkiet854A@
+networks:
+  hr-management-server-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

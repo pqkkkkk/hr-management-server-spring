@@ -14,7 +14,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
 @Configuration
-@Profile("!test")
+@Profile({"dev", "gcp"})
 public class GcsConfig {
 
     @Value("${gcs.project-id}")
