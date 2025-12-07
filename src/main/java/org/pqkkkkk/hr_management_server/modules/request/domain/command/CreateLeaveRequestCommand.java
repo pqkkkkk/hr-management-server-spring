@@ -21,4 +21,5 @@ public class CreateLeaveRequestCommand {
     private LocalDate endDate;
     private String reason;
     private List<ShiftType> shifts; // Optional: for half-day leaves
+    private String attachmentUrl;
 }

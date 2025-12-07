@@ -63,6 +63,7 @@ public class LeaveRequestCommandServiceImpl implements LeaveRequestCommandServic
                 .status(RequestStatus.PENDING)
                 .title("Leave Request: " + command.getLeaveType())
                 .userReason(command.getReason())
+                .attachmentUrl(command.getAttachmentUrl())
                 .employee(employee)
                 .build();
 
