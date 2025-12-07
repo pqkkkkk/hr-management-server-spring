@@ -15,7 +15,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Profile("test")
+@Profile({"docker", "test"})
 @Slf4j
 public class LocalStorageService implements StorageService {
 
