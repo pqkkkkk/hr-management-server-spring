@@ -67,10 +67,12 @@ public class Request {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approver_id")
+    // User who has the authority to approve or reject the request
     User approver;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processor_id")
+    // User who is delegated to process the request
     User processor;
     
     @Column(name = "processed_at")
