@@ -336,9 +336,9 @@ public class RequestCommandServiceImpl implements RequestCommandService {
             
             // Check for duplicate check-in request on the same date
             LocalDate checkInDate = request.getAdditionalCheckInInfo().getDesiredCheckInTime().toLocalDate();
-            boolean exists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkInDate, RequestType.CHECK_IN);
+            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkInDate, RequestType.CHECK_IN);
 
-            if (exists) {
+            if (checkInExists) {
                 throw new IllegalArgumentException("Duplicate check-in request for date: " + checkInDate);
             }
     
@@ -354,50 +354,57 @@ public class RequestCommandServiceImpl implements RequestCommandService {
     }
 
     // ==================== CHECK-OUT REQUEST ====================
-    // @Override
-    // @Transactional
-    // public Request createCheckOutRequest(Request request) {
-    //         // Validate request 
-    //         if (request == null) {
-    //             throw new IllegalArgumentException("Request cannot be null.");
-    //         }
+    @Override
+    @Transactional
+    public Request createCheckOutRequest(Request request) {
+            // Validate request 
+            if (request == null) {
+                throw new IllegalArgumentException("Request cannot be null.");
+            }
         
-    //         // Validate employee
-    //         if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
-    //             throw new IllegalArgumentException("Employee information is required for check-out request creation.");
-    //         }
+            // Validate employee
+            if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
+                throw new IllegalArgumentException("Employee information is required for check-out request creation.");
+            }
 
-    //         // Validate additionalCheckOutInfo
-    //         if (request.getAdditionalCheckOutInfo() == null) {
-    //             throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
-    //         }
+            // Validate additionalCheckOutInfo
+            if (request.getAdditionalCheckOutInfo() == null) {
+                throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
+            }
         
-    //         // Validate desiredCheckOutTime and currentCheckOutTime
-    //         if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
-    //             throw new IllegalArgumentException("Desired check-out time is required.");
-    //         }
+            // Validate desiredCheckOutTime and currentCheckOutTime
+            if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
+                throw new IllegalArgumentException("Desired check-out time is required.");
+            }
         
-    //         if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
-    //             throw new IllegalArgumentException("Current check-out time is required.");
-    //         }
+            if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
+                throw new IllegalArgumentException("Current check-out time is required.");
+            }
 
-    //         // Check for duplicate check-out request on the same date
-    //         LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
-    //         boolean exists = requestDao.existsCheckOutRequestForEmployeeOnDate(request.getEmployee().getUserId(), checkOutDate);
+            // Check for duplicate check-out request on the same date
+            LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
+            boolean checkOutExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_OUT);
 
-    //         if (exists) {
-    //             throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
-    //         }
+            if (checkOutExists) {
+                throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
+            }
     
-    //         // Set requestType (CHECK OUT ) and status(PENDING)
-    //         request.setRequestType(RequestType.CHECK_OUT);
+            // Check exists check in request for the same date
+            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_IN);
 
-    //         request.setStatus((RequestStatus.PENDING));
+            if (!checkInExists) {
+                throw new IllegalArgumentException("No corresponding check-in request found for date: " + checkOutDate);
+            }
 
-    //         // Link back request in additionalCheckOutInfo
-    //         request.getAdditionalCheckOutInfo().setRequest(request);
+            // Set requestType (CHECK OUT ) and status(PENDING)
+            request.setRequestType(RequestType.CHECK_OUT);
 
-    //         return requestDao.createRequest(request);
-    // }
+            request.setStatus((RequestStatus.PENDING));
+
+            // Link back request in additionalCheckOutInfo
+            request.getAdditionalCheckOutInfo().setRequest(request);
+
+            return requestDao.createRequest(request);
+    }
 
 }
