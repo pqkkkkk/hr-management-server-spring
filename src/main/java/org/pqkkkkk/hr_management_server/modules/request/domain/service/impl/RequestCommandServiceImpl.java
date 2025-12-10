@@ -307,18 +307,6 @@ public class RequestCommandServiceImpl implements RequestCommandService {
     }
 
     // ==================== CHECK-IN REQUEST ====================
-
-    /**
-     * Tạo Check-in Request
-     * 
-     * Flow:
-     * 1. Validate request input
-     * 2. Validate employee tồn tại
-     * 3. Validate additionalCheckInInfo và các trường bên trong
-     * 4. Check duplicate (không cho tạo 2 check-in request cùng ngày)
-     * 5. Set requestType = CHECK_IN, status = PENDING
-     * 6. Save và return
-     */
     @Override
     @Transactional
     public Request createCheckInRequest(Request request) {
@@ -348,7 +336,7 @@ public class RequestCommandServiceImpl implements RequestCommandService {
             
             // Check for duplicate check-in request on the same date
             LocalDate checkInDate = request.getAdditionalCheckInInfo().getDesiredCheckInTime().toLocalDate();
-            boolean exists = requestDao.existsCheckInRequestForEmployeeOnDate(request.getEmployee().getUserId(), checkInDate);
+            boolean exists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkInDate, RequestType.CHECK_IN);
 
             if (exists) {
                 throw new IllegalArgumentException("Duplicate check-in request for date: " + checkInDate);
@@ -361,8 +349,55 @@ public class RequestCommandServiceImpl implements RequestCommandService {
 
             // Link back request in additionalCheckInInfo
             request.getAdditionalCheckInInfo().setRequest(request);
-            
+
             return requestDao.createRequest(request);
     }
+
+    // ==================== CHECK-OUT REQUEST ====================
+    // @Override
+    // @Transactional
+    // public Request createCheckOutRequest(Request request) {
+    //         // Validate request 
+    //         if (request == null) {
+    //             throw new IllegalArgumentException("Request cannot be null.");
+    //         }
+        
+    //         // Validate employee
+    //         if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
+    //             throw new IllegalArgumentException("Employee information is required for check-out request creation.");
+    //         }
+
+    //         // Validate additionalCheckOutInfo
+    //         if (request.getAdditionalCheckOutInfo() == null) {
+    //             throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
+    //         }
+        
+    //         // Validate desiredCheckOutTime and currentCheckOutTime
+    //         if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
+    //             throw new IllegalArgumentException("Desired check-out time is required.");
+    //         }
+        
+    //         if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
+    //             throw new IllegalArgumentException("Current check-out time is required.");
+    //         }
+
+    //         // Check for duplicate check-out request on the same date
+    //         LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
+    //         boolean exists = requestDao.existsCheckOutRequestForEmployeeOnDate(request.getEmployee().getUserId(), checkOutDate);
+
+    //         if (exists) {
+    //             throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
+    //         }
+    
+    //         // Set requestType (CHECK OUT ) and status(PENDING)
+    //         request.setRequestType(RequestType.CHECK_OUT);
+
+    //         request.setStatus((RequestStatus.PENDING));
+
+    //         // Link back request in additionalCheckOutInfo
+    //         request.getAdditionalCheckOutInfo().setRequest(request);
+
+    //         return requestDao.createRequest(request);
+    // }
 
 }
