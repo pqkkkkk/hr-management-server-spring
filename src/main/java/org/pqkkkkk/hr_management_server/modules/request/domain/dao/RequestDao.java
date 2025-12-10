@@ -9,4 +9,5 @@ public interface RequestDao {
     public Request updateRequest(Request request);
     public Request getRequestById(String requestId);
     public Page<Request> getRequests(RequestFilter filter);
+    public boolean existsCheckInRequestForEmployeeOnDate(String employeeId, java.time.LocalDate date);
 }
