@@ -17,6 +17,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalTimesheetInfo;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -303,6 +304,107 @@ public class RequestCommandServiceImpl implements RequestCommandService {
         if(!approverId.equals(actualApproverId) && !approverId.equals(actualProcessorId)) {
             throw new SecurityException("Approver does not have permission to perform this action.");
         }
+    }
+
+    // ==================== CHECK-IN REQUEST ====================
+    @Override
+    @Transactional
+    public Request createCheckInRequest(Request request) {
+            // Validate request 
+            if (request == null) {
+                throw new IllegalArgumentException("Request cannot be null.");
+            }
+        
+            // Validate employee
+            if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
+                throw new IllegalArgumentException("Employee information is required for check-in request creation.");
+            }
+
+            // Validate additionalCheckInInfo
+            if (request.getAdditionalCheckInInfo() == null) {
+                throw new IllegalArgumentException("Additional check-in information is required for check-in request creation.");
+            }
+        
+            // Validate desiredCheckInTime and currentCheckInTime
+            if (request.getAdditionalCheckInInfo().getDesiredCheckInTime() == null) {
+                throw new IllegalArgumentException("Desired check-in time is required.");
+            }
+        
+            if (request.getAdditionalCheckInInfo().getCurrentCheckInTime() == null) {
+                throw new IllegalArgumentException("Current check-in time is required.");
+            }
+            
+            // Check for duplicate check-in request on the same date
+            LocalDate checkInDate = request.getAdditionalCheckInInfo().getDesiredCheckInTime().toLocalDate();
+            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkInDate, RequestType.CHECK_IN);
+
+            if (checkInExists) {
+                throw new IllegalArgumentException("Duplicate check-in request for date: " + checkInDate);
+            }
+    
+            // Set requestType (CHECK IN ) and status(PENDING)
+            request.setRequestType(RequestType.CHECK_IN);
+
+            request.setStatus((RequestStatus.PENDING));
+
+            // Link back request in additionalCheckInInfo
+            request.getAdditionalCheckInInfo().setRequest(request);
+
+            return requestDao.createRequest(request);
+    }
+
+    // ==================== CHECK-OUT REQUEST ====================
+    @Override
+    @Transactional
+    public Request createCheckOutRequest(Request request) {
+            // Validate request 
+            if (request == null) {
+                throw new IllegalArgumentException("Request cannot be null.");
+            }
+        
+            // Validate employee
+            if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
+                throw new IllegalArgumentException("Employee information is required for check-out request creation.");
+            }
+
+            // Validate additionalCheckOutInfo
+            if (request.getAdditionalCheckOutInfo() == null) {
+                throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
+            }
+        
+            // Validate desiredCheckOutTime and currentCheckOutTime
+            if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
+                throw new IllegalArgumentException("Desired check-out time is required.");
+            }
+        
+            if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
+                throw new IllegalArgumentException("Current check-out time is required.");
+            }
+
+            // Check for duplicate check-out request on the same date
+            LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
+            boolean checkOutExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_OUT);
+
+            if (checkOutExists) {
+                throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
+            }
+    
+            // Check exists check in request for the same date
+            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_IN);
+
+            if (!checkInExists) {
+                throw new IllegalArgumentException("No corresponding check-in request found for date: " + checkOutDate);
+            }
+
+            // Set requestType (CHECK OUT ) and status(PENDING)
+            request.setRequestType(RequestType.CHECK_OUT);
+
+            request.setStatus((RequestStatus.PENDING));
+
+            // Link back request in additionalCheckOutInfo
+            request.getAdditionalCheckOutInfo().setRequest(request);
+
+            return requestDao.createRequest(request);
     }
 
 }

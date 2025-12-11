@@ -6,4 +6,6 @@ public interface RequestCommandService {
     public Request createLeaveRequest(Request request);
     public Request approveRequest(String requestId, String approverId);
     public Request rejectRequest(String requestId, String approverId, String rejectionReason);
+    public Request createCheckInRequest(Request request);
+    public Request createCheckOutRequest(Request request);
 }

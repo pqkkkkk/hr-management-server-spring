@@ -7,6 +7,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.filter.FilterCriteria.RequestFilter;
 import org.pqkkkkk.hr_management_server.modules.request.infrastructure.dao.jpa_repository.RequestRepository;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.shared.Constants.SortDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import jakarta.persistence.criteria.Predicate;
 
 @Repository
@@ -136,6 +139,21 @@ public class RequestJpaDao implements RequestDao {
             filter.currentPage() - 1, // Spring Data JPA uses 0-based page index
             filter.pageSize(),
             sort
+        );
+    }
+
+    @Override
+    public boolean existsByEmployeeAndDateAndType(String employeeId, java.time.LocalDate date, RequestType type) {
+        LocalDateTime startOfDate = date.atStartOfDay();
+
+        //Chỗ này tui k rõ logic lắm nên tôi để end of date là ngày tiếp theo lúc 00:00
+        LocalDateTime endOfDate = date.plusDays(1).atStartOfDay();
+
+        return requestRepository.existsByEmployee_UserIdAndRequestTypeAndCreatedAtBetween(
+            employeeId,
+            type,
+            startOfDate,
+            endOfDate
         );
     }
 }
