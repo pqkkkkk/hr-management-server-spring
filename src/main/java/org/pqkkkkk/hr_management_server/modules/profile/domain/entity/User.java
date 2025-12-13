@@ -1,7 +1,9 @@
 package org.pqkkkkk.hr_management_server.modules.profile.domain.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.UuidGenerator;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserGender;
@@ -9,23 +11,33 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.User
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "user_table")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"manager", "subordinates"})
+@EqualsAndHashCode(exclude = {"manager", "subordinates"})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -88,4 +100,32 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "department_id")
     Department department;
+
+    // Manager relationship (self-referencing)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    User manager;
+
+    // List of subordinates (employees managed by this user)
+    @OneToMany(mappedBy = "manager", fetch = FetchType.LAZY)
+    @JsonIgnore
+    List<User> subordinates;
+
+    // Annual leave balance
+    @Column(name = "max_annual_leave")
+    @Builder.Default
+    Integer maxAnnualLeave = 12;
+
+    @Column(name = "remaining_annual_leave")
+    @Builder.Default
+    BigDecimal remainingAnnualLeave = new BigDecimal("12.0");
+
+    // Work From Home (WFH) days balance
+    @Column(name = "max_wfh_days")
+    @Builder.Default
+    Integer maxWfhDays = 10;
+
+    @Column(name = "remaining_wfh_days")
+    @Builder.Default
+    Integer remainingWfhDays = 10;
 }
