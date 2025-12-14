@@ -2,10 +2,13 @@ package org.pqkkkkk.hr_management_server.modules.request.controller.http.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckInInfo;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckOutInfo;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalLeaveInfo;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.LeaveType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
@@ -110,4 +113,66 @@ public class Request {
             @NotBlank(message = "Approver ID is required")
             String approverId
     ) {}
+    
+    /**
+     * Request DTO for creating a check-in request
+     */
+    public record CreateCheckInRequestRequest(
+            String title,
+            
+            String userReason,
+            
+            @NotBlank(message = "Employee ID is required")
+            String employeeId,
+            
+            @NotNull(message = "Desired check-in time is required")
+            LocalDateTime desiredCheckInTime
+    ) {
+        public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity() {
+            // Build additional check-in info
+            AdditionalCheckInInfo additionalCheckInInfo = AdditionalCheckInInfo.builder()
+                    .desiredCheckInTime(desiredCheckInTime)
+                    .build();
+            
+            // Build and return request entity
+            return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                    .requestType(RequestType.CHECK_IN)
+                    .title(title)
+                    .userReason(userReason)
+                    .employee(User.builder().userId(employeeId).build())
+                    .additionalCheckInInfo(additionalCheckInInfo)
+                    .build();
+        }
+    }
+    
+    /**
+     * Request DTO for creating a check-out request
+     */
+    public record CreateCheckOutRequestRequest(
+            String title,
+            
+            String userReason,
+            
+            @NotBlank(message = "Employee ID is required")
+            String employeeId,
+            
+            @NotNull(message = "Desired check-out time is required")
+            LocalDateTime desiredCheckOutTime
+    ) {
+        public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity() {
+            // Build additional check-out info
+            AdditionalCheckOutInfo additionalCheckOutInfo = AdditionalCheckOutInfo.builder()
+                    .desiredCheckOutTime(desiredCheckOutTime)
+                    .build();
+            
+            // Build and return request entity
+            return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                    .requestType(RequestType.CHECK_OUT)
+                    .title(title)
+                    .userReason(userReason)
+                    .employee(User.builder().userId(employeeId).build())
+                    .additionalCheckOutInfo(additionalCheckOutInfo)
+                    .build();
+        }
+    }
 }

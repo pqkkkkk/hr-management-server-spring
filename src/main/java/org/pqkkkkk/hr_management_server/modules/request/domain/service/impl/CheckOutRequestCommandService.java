@@ -1,7 +1,10 @@
 package org.pqkkkkk.hr_management_server.modules.request.domain.service.impl;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
+import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQueryService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
@@ -9,15 +12,19 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class CheckOutRequestCommandService implements RequestCommandService {
     private final RequestDao requestDao;
+    private final ProfileQueryService profileQueryService;
+    private final static LocalTime CHECK_OUT_EARLY_TIME = LocalTime.of(17, 0); // 5:00 PM
 
-    public CheckOutRequestCommandService(RequestDao requestDao) {
+    public CheckOutRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService) {
         this.requestDao = requestDao;
+        this.profileQueryService = profileQueryService;
     }
-    @Override
-    public Request createRequest(Request request) {
+    private void validateRequestInfo(Request request) {
         // Validate request 
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null.");
@@ -32,34 +39,28 @@ public class CheckOutRequestCommandService implements RequestCommandService {
         if (request.getAdditionalCheckOutInfo() == null) {
             throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
         }
-    
-        // Validate desiredCheckOutTime and currentCheckOutTime
-        if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
+
+        LocalDateTime desiredCheckOutTime = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime();
+        // Validate checkOutTime
+        if (desiredCheckOutTime == null) {
             throw new IllegalArgumentException("Desired check-out time is required.");
         }
-    
-        if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
-            throw new IllegalArgumentException("Current check-out time is required.");
+        if(desiredCheckOutTime.toLocalTime().isBefore(CHECK_OUT_EARLY_TIME) && request.getUserReason()== null){
+            throw new IllegalArgumentException("A reason must be provided for check-out requests before " + CHECK_OUT_EARLY_TIME);
         }
+    }
+    @Override
+    @Transactional
+    public Request createRequest(Request request) {
+        validateRequestInfo(request);
 
-        // Check for duplicate check-out request on the same date
-        LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
-        boolean checkOutExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_OUT);
-
-        if (checkOutExists) {
-            throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
-        }
-
-        // Check exists check in request for the same date
-        boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_IN);
-
-        if (!checkInExists) {
-            throw new IllegalArgumentException("No corresponding check-in request found for date: " + checkOutDate);
-        }
+        User employee = profileQueryService.getProfileById(request.getEmployee().getUserId());
+        request.setEmployee(employee);
+        request.setProcessor(employee.getManager());
+        request.setApprover(employee.getManager());
 
         // Set requestType (CHECK OUT ) and status(PENDING)
         request.setRequestType(RequestType.CHECK_OUT);
-
         request.setStatus((RequestStatus.PENDING));
 
         // Link back request in additionalCheckOutInfo

@@ -141,7 +141,6 @@ public class RequestJpaDao implements RequestDao {
     public boolean existsByEmployeeAndDateAndType(String employeeId, java.time.LocalDate date, RequestType type) {
         LocalDateTime startOfDate = date.atStartOfDay();
 
-        // Chỗ này tui k rõ logic lắm nên tôi để end of date là ngày tiếp theo lúc 00:00
         LocalDateTime endOfDate = date.plusDays(1).atStartOfDay();
 
         return requestRepository.existsByEmployee_UserIdAndRequestTypeAndCreatedAtBetween(
