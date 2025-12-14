@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQueryService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
@@ -17,7 +19,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
-import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalTimesheetInfo;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -25,11 +27,19 @@ import jakarta.transaction.Transactional;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Constants;
 
 @Service
-public class RequestCommandServiceImpl implements RequestCommandService {
+public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
+    private final ProfileQueryService profileQueryService;
+    private final ProfileCommandService profileCommandService;
 
-    public RequestCommandServiceImpl(RequestDao requestDao) {
+    public LeaveRequestCommandServiceImpl(
+            RequestDao requestDao, 
+            ProfileQueryService profileQueryService,
+            @Qualifier("profileRequestCommandService") ProfileCommandService profileCommandService
+    ) {
         this.requestDao = requestDao;
+        this.profileQueryService = profileQueryService;
+        this.profileCommandService = profileCommandService;
     }
 
     private void validateLeaveRequest(Request request) {
@@ -171,26 +181,22 @@ public class RequestCommandServiceImpl implements RequestCommandService {
     }
 
     private BigDecimal checkEmployeeEligibility(Request request) {
-        // TODO: Inject ProfileQueryService and get actual employee
-        // User employee = profileQueryService.getProfileById(request.getEmployee().getUserId());
-        // if (employee == null) {
-        //     throw new IllegalArgumentException("Employee not found with ID: " + request.getEmployee().getUserId());
-        // }
+        User employee = profileQueryService.getProfileById(request.getEmployee().getUserId());
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee not found with ID: " + request.getEmployee().getUserId());
+        }
         
         BigDecimal requestedLeaveBalance = calculateRequestedLeaveBalance(request);
         
         // Check if single request doesn't exceed reasonable limit (business rule)
-        if (requestedLeaveBalance.compareTo(Constants.MAX_LEAVE_BALANCE) > 0) {
+        if (requestedLeaveBalance.compareTo(BigDecimal.valueOf(employee.getMaxAnnualLeave())) > 0) {
             throw new IllegalArgumentException(
                 "Single leave request cannot exceed " + Constants.MAX_LEAVE_BALANCE + " days. " +
                 "Requested: " + requestedLeaveBalance + " days."
             );
         }
 
-        // TODO: Check actual employee's remaining leave balance from Profile module
-        // BigDecimal employeeRemainingBalance = employee.getRemainingLeaveBalance();
-        // Temporary using constant for demonstration
-        BigDecimal employeeRemainingBalance = Constants.REMAINING_LEAVE_BALANCE;
+        BigDecimal employeeRemainingBalance = employee.getRemainingAnnualLeave();
         
         if (requestedLeaveBalance.compareTo(employeeRemainingBalance) > 0) {
             throw new IllegalArgumentException(
@@ -205,7 +211,7 @@ public class RequestCommandServiceImpl implements RequestCommandService {
 
     @Override
     @Transactional
-    public Request createLeaveRequest(Request request) {
+    public Request createRequest(Request request) {
         // Step 1: Validate request data
         validateLeaveRequest(request);
 
@@ -213,9 +219,9 @@ public class RequestCommandServiceImpl implements RequestCommandService {
         BigDecimal requestedLeaveBalance = checkEmployeeEligibility(request);
 
         // Step 3: Set approver and processor
-        // TODO: Get employee's actual manager from Profile module
-        request.setApprover(User.builder().userId(Constants.DEFAULT_MANAGER_ID).build());
-        request.setProcessor(User.builder().userId(Constants.DEFAULT_MANAGER_ID).build());
+        User employee = profileQueryService.getProfileById(request.getEmployee().getUserId());
+        request.setApprover(User.builder().userId(employee.getManager().getUserId()).build());
+        request.setProcessor(User.builder().userId(employee.getManager().getUserId()).build());
         
         // Step 4: Set initial status and total days
         request.setStatus(RequestStatus.PENDING);
@@ -243,17 +249,19 @@ public class RequestCommandServiceImpl implements RequestCommandService {
         req.setStatus(RequestStatus.APPROVED);
         req.setProcessedAt(LocalDateTime.now());
         
-        // Step 4: Save updated request
-        Request updatedRequest = requestDao.updateRequest(req);
+        // Step 4: JPA will automatically flush changes at transaction commit
+        // No need to explicitly call updateRequest() in @Transactional context
 
         // Step 5: Deduct leave balance from employee
-        // TODO: Update employee's leave balance from Profile module
-        // BigDecimal approvedDays = req.getAdditionalLeaveInfo().getTotalDays();
-        // profileCommandService.deductLeaveBalance(req.getEmployee().getUserId(), approvedDays);
+        BigDecimal requestedLeaveBalance = calculateRequestedLeaveBalance(req);
+        User employee = profileQueryService.getProfileById(req.getEmployee().getUserId());
+        BigDecimal newRemainingBalance = employee.getRemainingAnnualLeave().subtract(requestedLeaveBalance);
+        employee.setRemainingAnnualLeave(newRemainingBalance);
+        profileCommandService.updateProfile(employee);
 
         // TODO: Notify relevant parties (employee, HR), will be implemented in future
 
-        return updatedRequest;
+        return req;
     }
 
     @Override
@@ -276,11 +284,11 @@ public class RequestCommandServiceImpl implements RequestCommandService {
         req.setProcessedAt(LocalDateTime.now());
         
         // Step 5: Save updated request
-        Request updatedRequest = requestDao.updateRequest(req);
+        // JPA will automatically flush changes at transaction commit
 
         // TODO: Notify relevant parties (employee, HR), will be implemented in future
 
-        return updatedRequest;
+        return req;
     }
 
     private Request checkRequestIsValid(String requestId) {
@@ -304,107 +312,6 @@ public class RequestCommandServiceImpl implements RequestCommandService {
         if(!approverId.equals(actualApproverId) && !approverId.equals(actualProcessorId)) {
             throw new SecurityException("Approver does not have permission to perform this action.");
         }
-    }
-
-    // ==================== CHECK-IN REQUEST ====================
-    @Override
-    @Transactional
-    public Request createCheckInRequest(Request request) {
-            // Validate request 
-            if (request == null) {
-                throw new IllegalArgumentException("Request cannot be null.");
-            }
-        
-            // Validate employee
-            if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
-                throw new IllegalArgumentException("Employee information is required for check-in request creation.");
-            }
-
-            // Validate additionalCheckInInfo
-            if (request.getAdditionalCheckInInfo() == null) {
-                throw new IllegalArgumentException("Additional check-in information is required for check-in request creation.");
-            }
-        
-            // Validate desiredCheckInTime and currentCheckInTime
-            if (request.getAdditionalCheckInInfo().getDesiredCheckInTime() == null) {
-                throw new IllegalArgumentException("Desired check-in time is required.");
-            }
-        
-            if (request.getAdditionalCheckInInfo().getCurrentCheckInTime() == null) {
-                throw new IllegalArgumentException("Current check-in time is required.");
-            }
-            
-            // Check for duplicate check-in request on the same date
-            LocalDate checkInDate = request.getAdditionalCheckInInfo().getDesiredCheckInTime().toLocalDate();
-            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkInDate, RequestType.CHECK_IN);
-
-            if (checkInExists) {
-                throw new IllegalArgumentException("Duplicate check-in request for date: " + checkInDate);
-            }
-    
-            // Set requestType (CHECK IN ) and status(PENDING)
-            request.setRequestType(RequestType.CHECK_IN);
-
-            request.setStatus((RequestStatus.PENDING));
-
-            // Link back request in additionalCheckInInfo
-            request.getAdditionalCheckInInfo().setRequest(request);
-
-            return requestDao.createRequest(request);
-    }
-
-    // ==================== CHECK-OUT REQUEST ====================
-    @Override
-    @Transactional
-    public Request createCheckOutRequest(Request request) {
-            // Validate request 
-            if (request == null) {
-                throw new IllegalArgumentException("Request cannot be null.");
-            }
-        
-            // Validate employee
-            if (request.getEmployee() == null || request.getEmployee().getUserId() == null) {
-                throw new IllegalArgumentException("Employee information is required for check-out request creation.");
-            }
-
-            // Validate additionalCheckOutInfo
-            if (request.getAdditionalCheckOutInfo() == null) {
-                throw new IllegalArgumentException("Additional check-out information is required for check-out request creation.");
-            }
-        
-            // Validate desiredCheckOutTime and currentCheckOutTime
-            if (request.getAdditionalCheckOutInfo().getDesiredCheckOutTime() == null) {
-                throw new IllegalArgumentException("Desired check-out time is required.");
-            }
-        
-            if (request.getAdditionalCheckOutInfo().getCurrentCheckOutTime() == null) {
-                throw new IllegalArgumentException("Current check-out time is required.");
-            }
-
-            // Check for duplicate check-out request on the same date
-            LocalDate checkOutDate = request.getAdditionalCheckOutInfo().getDesiredCheckOutTime().toLocalDate();
-            boolean checkOutExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_OUT);
-
-            if (checkOutExists) {
-                throw new IllegalArgumentException("Duplicate check-out request for date: " + checkOutDate);
-            }
-    
-            // Check exists check in request for the same date
-            boolean checkInExists = requestDao.existsByEmployeeAndDateAndType(request.getEmployee().getUserId(), checkOutDate, RequestType.CHECK_IN);
-
-            if (!checkInExists) {
-                throw new IllegalArgumentException("No corresponding check-in request found for date: " + checkOutDate);
-            }
-
-            // Set requestType (CHECK OUT ) and status(PENDING)
-            request.setRequestType(RequestType.CHECK_OUT);
-
-            request.setStatus((RequestStatus.PENDING));
-
-            // Link back request in additionalCheckOutInfo
-            request.getAdditionalCheckOutInfo().setRequest(request);
-
-            return requestDao.createRequest(request);
     }
 
 }

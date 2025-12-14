@@ -16,13 +16,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import jakarta.persistence.criteria.Predicate;
 
 @Repository
 public class RequestJpaDao implements RequestDao {
-    
+
     private final RequestRepository requestRepository;
 
     public RequestJpaDao(RequestRepository requestRepository) {
@@ -34,12 +33,12 @@ public class RequestJpaDao implements RequestDao {
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null");
         }
-        
+
         // Ensure this is a new request (no ID set yet, or ID doesn't exist)
         if (request.getRequestId() != null && requestRepository.existsById(request.getRequestId())) {
             throw new IllegalArgumentException("Request with ID " + request.getRequestId() + " already exists");
         }
-        
+
         return requestRepository.save(request);
     }
 
@@ -48,11 +47,11 @@ public class RequestJpaDao implements RequestDao {
         if (request == null) {
             throw new IllegalArgumentException("Request cannot be null");
         }
-        
+
         if (request.getRequestId() == null) {
             throw new IllegalArgumentException("Request ID cannot be null for update operation");
         }
-        
+
         return requestRepository.save(request);
     }
 
@@ -93,9 +92,8 @@ public class RequestJpaDao implements RequestDao {
             // Filter by department ID (via employee's department)
             if (filter.departmentId() != null && !filter.departmentId().isBlank()) {
                 predicates.add(criteriaBuilder.equal(
-                    root.get("employee").get("department").get("departmentId"), 
-                    filter.departmentId()
-                ));
+                        root.get("employee").get("department").get("departmentId"),
+                        filter.departmentId()));
             }
 
             // Filter by request status
@@ -111,16 +109,14 @@ public class RequestJpaDao implements RequestDao {
             // Filter by date range (createdAt)
             if (filter.startDate() != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                    root.get("createdAt").as(java.time.LocalDate.class),
-                    filter.startDate()
-                ));
+                        root.get("createdAt").as(java.time.LocalDate.class),
+                        filter.startDate()));
             }
 
             if (filter.endDate() != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                    root.get("createdAt").as(java.time.LocalDate.class),
-                    filter.endDate()
-                ));
+                        root.get("createdAt").as(java.time.LocalDate.class),
+                        filter.endDate()));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -132,28 +128,25 @@ public class RequestJpaDao implements RequestDao {
      */
     private Pageable buildPageable(RequestFilter filter) {
         Sort sort = filter.sortDirection() == SortDirection.ASC
-            ? Sort.by(filter.sortBy()).ascending()
-            : Sort.by(filter.sortBy()).descending();
+                ? Sort.by(filter.sortBy()).ascending()
+                : Sort.by(filter.sortBy()).descending();
 
         return PageRequest.of(
-            filter.currentPage() - 1, // Spring Data JPA uses 0-based page index
-            filter.pageSize(),
-            sort
-        );
+                filter.currentPage() - 1, // Spring Data JPA uses 0-based page index
+                filter.pageSize(),
+                sort);
     }
 
     @Override
     public boolean existsByEmployeeAndDateAndType(String employeeId, java.time.LocalDate date, RequestType type) {
         LocalDateTime startOfDate = date.atStartOfDay();
 
-        //Chỗ này tui k rõ logic lắm nên tôi để end of date là ngày tiếp theo lúc 00:00
         LocalDateTime endOfDate = date.plusDays(1).atStartOfDay();
 
         return requestRepository.existsByEmployee_UserIdAndRequestTypeAndCreatedAtBetween(
-            employeeId,
-            type,
-            startOfDate,
-            endOfDate
-        );
+                employeeId,
+                type,
+                startOfDate,
+                endOfDate);
     }
 }

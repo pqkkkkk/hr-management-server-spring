@@ -10,6 +10,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.filter.FilterCriteria.RequestFilter;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestQueryService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +34,13 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/requests/leave")
 public class LeaveRequestApi {
     
-    private final RequestCommandService requestCommandService;
+    private final RequestCommandService leaveRequestCommandService;
     private final RequestQueryService requestQueryService;
     
     public LeaveRequestApi(
-            RequestCommandService requestCommandService,
+            @Qualifier("leaveRequestCommandServiceImpl") RequestCommandService leaveRequestCommandService,
             RequestQueryService requestQueryService) {
-        this.requestCommandService = requestCommandService;
+        this.leaveRequestCommandService = leaveRequestCommandService;
         this.requestQueryService = requestQueryService;
     }
     
@@ -58,7 +59,7 @@ public class LeaveRequestApi {
         Request requestEntity = request.toEntity();
         
         // Create leave request through service
-        Request createdRequest = requestCommandService.createLeaveRequest(requestEntity);
+        Request createdRequest = leaveRequestCommandService.createRequest(requestEntity);
         
         // Convert entity to DTO
         LeaveRequestDTO leaveRequestDTO = LeaveRequestDTO.fromEntity(createdRequest);
@@ -183,7 +184,7 @@ public class LeaveRequestApi {
             @Valid @RequestBody ApproveRequestRequest request) {
         
         // Approve request through service
-        Request approvedRequest = requestCommandService.approveRequest(id, request.approverId());
+        Request approvedRequest = leaveRequestCommandService.approveRequest(id, request.approverId());
         
         // Convert entity to DTO
         LeaveRequestDTO leaveRequestDTO = LeaveRequestDTO.fromEntity(approvedRequest);
@@ -213,7 +214,7 @@ public class LeaveRequestApi {
             @PathVariable String id,
             @Valid @RequestBody RejectRequestRequest request) {
         
-        Request rejectedRequest = requestCommandService.rejectRequest(
+        Request rejectedRequest = leaveRequestCommandService.rejectRequest(
                 id, 
                 request.approverId(), 
                 request.rejectReason()

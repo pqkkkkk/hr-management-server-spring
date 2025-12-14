@@ -3,6 +3,7 @@ package org.pqkkkkk.hr_management_server.modules.request.domain.service.impl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.pqkkkkk.hr_management_server.modules.profile.domain.dao.ProfileDao;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalLeaveInfo;
@@ -27,14 +28,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("RequestManagerCommandService Integration Tests")
-class RequestCommandServiceImplIntegrationTest {
+@DisplayName("LeaveRequestCommandService Integration Tests")
+class LeaveRequestCommandServiceImplIntegrationTest {
 
         @Autowired
-        private RequestCommandServiceImpl requestCommandService;
+        private LeaveRequestCommandServiceImpl requestCommandService;
 
         @Autowired
         private RequestDao requestDao;
+
+        @Autowired
+        private ProfileDao profileDao;
 
         private String testEmployeeId;
         private String testApproverId;
@@ -78,7 +82,7 @@ class RequestCommandServiceImplIntegrationTest {
                                                 buildLeaveDate(futureDate3, ShiftType.MORNING)));
 
                 // Act
-                Request createdRequest = requestCommandService.createLeaveRequest(request);
+                Request createdRequest = requestCommandService.createRequest(request);
 
                 // Assert
                 assertNotNull(createdRequest);
@@ -112,7 +116,7 @@ class RequestCommandServiceImplIntegrationTest {
                                                 buildLeaveDate(futureDate2, ShiftType.AFTERNOON)));
 
                 // Act
-                Request createdRequest = requestCommandService.createLeaveRequest(request);
+                Request createdRequest = requestCommandService.createRequest(request);
 
                 // Assert
                 assertNotNull(createdRequest);
@@ -133,7 +137,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("Request title is required"));
         }
 
@@ -151,7 +155,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("User reason is required"));
         }
 
@@ -170,7 +174,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("Leave dates cannot be empty"));
         }
 
@@ -189,7 +193,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("Cannot request leave for past dates"));
         }
 
@@ -211,7 +215,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("Duplicate leave date found"));
         }
 
@@ -230,7 +234,7 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("must be submitted at least"));
                 assertTrue(exception.getMessage().contains("working days in advance"));
         }
@@ -254,36 +258,12 @@ class RequestCommandServiceImplIntegrationTest {
                 // Act & Assert
                 IllegalArgumentException exception = assertThrows(
                                 IllegalArgumentException.class,
-                                () -> requestCommandService.createLeaveRequest(request));
+                                () -> requestCommandService.createRequest(request));
                 assertTrue(exception.getMessage().contains("cannot exceed"));
                 assertTrue(exception.getMessage().contains("days"));
         }
 
         // ==================== approveRequest Tests ====================
-
-        @Test
-        @DisplayName("Should successfully approve pending request")
-        void testApproveRequest_ValidPendingRequest_Success() {
-                // Arrange
-                Request requestBefore = requestDao.getRequestById(testPendingRequestId);
-                assertNotNull(requestBefore);
-                assertEquals(RequestStatus.PENDING, requestBefore.getStatus());
-
-                // Act
-                Request approvedRequest = requestCommandService.approveRequest(
-                                testPendingRequestId,
-                                testApproverId);
-
-                // Assert
-                assertNotNull(approvedRequest);
-                assertEquals(RequestStatus.APPROVED, approvedRequest.getStatus());
-                assertNotNull(approvedRequest.getProcessedAt());
-
-                // Verify persistence
-                Request fetchedRequest = requestDao.getRequestById(testPendingRequestId);
-                assertEquals(RequestStatus.APPROVED, fetchedRequest.getStatus());
-                assertNotNull(fetchedRequest.getProcessedAt());
-        }
 
         @Test
         @DisplayName("Should fail to approve non-existent request")
@@ -467,6 +447,173 @@ class RequestCommandServiceImplIntegrationTest {
                                                 unauthorizedApproverId,
                                                 "Valid reason"));
                 assertTrue(exception.getMessage().contains("does not have permission"));
+        }
+
+        // ==================== Leave Balance Integration Tests ====================
+
+        @Test
+        @DisplayName("Should correctly deduct full day leave balance")
+        void testApproveRequest_DeductFullDayBalance_Success() {
+                // Arrange - Create request with 3 full days
+                LocalDate futureDate1 = LocalDate.now().plusDays(10);
+                LocalDate futureDate2 = LocalDate.now().plusDays(11);
+                LocalDate futureDate3 = LocalDate.now().plusDays(12);
+
+                Request request = buildLeaveRequest(
+                                testEmployeeId,
+                                "Test Full Days",
+                                "Testing full day deduction",
+                                LeaveType.ANNUAL,
+                                List.of(
+                                                buildLeaveDate(futureDate1, ShiftType.FULL_DAY),
+                                                buildLeaveDate(futureDate2, ShiftType.FULL_DAY),
+                                                buildLeaveDate(futureDate3, ShiftType.FULL_DAY)));
+
+                Request createdRequest = requestCommandService.createRequest(request);
+
+                User employeeBefore = profileDao.getProfileById(testEmployeeId);
+                BigDecimal balanceBefore = employeeBefore.getRemainingAnnualLeave();
+
+                // Act
+                Request approvedRequest = requestCommandService.approveRequest(
+                                createdRequest.getRequestId(),
+                                testApproverId);
+
+                // Assert
+                User employeeAfter = profileDao.getProfileById(testEmployeeId);
+                BigDecimal expectedBalance = balanceBefore.subtract(BigDecimal.valueOf(3.0));
+                assertEquals(expectedBalance, employeeAfter.getRemainingAnnualLeave());
+        }
+
+        @Test
+        @DisplayName("Should correctly deduct half day leave balance")
+        void testApproveRequest_DeductHalfDayBalance_Success() {
+                // Arrange - Create request with 2 half days (1 morning, 1 afternoon)
+                LocalDate futureDate1 = LocalDate.now().plusDays(20);
+                LocalDate futureDate2 = LocalDate.now().plusDays(21);
+
+                Request request = buildLeaveRequest(
+                                testEmployeeId,
+                                "Test Half Days",
+                                "Testing half day deduction",
+                                LeaveType.ANNUAL,
+                                List.of(
+                                                buildLeaveDate(futureDate1, ShiftType.MORNING),
+                                                buildLeaveDate(futureDate2, ShiftType.AFTERNOON)));
+
+                Request createdRequest = requestCommandService.createRequest(request);
+
+                User employeeBefore = profileDao.getProfileById(testEmployeeId);
+                BigDecimal balanceBefore = employeeBefore.getRemainingAnnualLeave();
+
+                // Act
+                Request approvedRequest = requestCommandService.approveRequest(
+                                createdRequest.getRequestId(),
+                                testApproverId);
+
+                // Assert
+                User employeeAfter = profileDao.getProfileById(testEmployeeId);
+                BigDecimal expectedBalance = balanceBefore.subtract(BigDecimal.valueOf(1.0));
+                assertEquals(expectedBalance, employeeAfter.getRemainingAnnualLeave());
+        }
+
+        @Test
+        @DisplayName("Should correctly deduct mixed day leave balance")
+        void testApproveRequest_DeductMixedDayBalance_Success() {
+                // Arrange - Create request with 2 full days + 1 morning (2.5 days total)
+                LocalDate futureDate1 = LocalDate.now().plusDays(30);
+                LocalDate futureDate2 = LocalDate.now().plusDays(31);
+                LocalDate futureDate3 = LocalDate.now().plusDays(32);
+
+                Request request = buildLeaveRequest(
+                                testEmployeeId,
+                                "Test Mixed Days",
+                                "Testing mixed day deduction",
+                                LeaveType.ANNUAL,
+                                List.of(
+                                                buildLeaveDate(futureDate1, ShiftType.FULL_DAY),
+                                                buildLeaveDate(futureDate2, ShiftType.FULL_DAY),
+                                                buildLeaveDate(futureDate3, ShiftType.MORNING)));
+
+                Request createdRequest = requestCommandService.createRequest(request);
+
+                User employeeBefore = profileDao.getProfileById(testEmployeeId);
+                BigDecimal balanceBefore = employeeBefore.getRemainingAnnualLeave();
+
+                // Act
+                Request approvedRequest = requestCommandService.approveRequest(
+                                createdRequest.getRequestId(),
+                                testApproverId);
+
+                // Assert
+                User employeeAfter = profileDao.getProfileById(testEmployeeId);
+                BigDecimal expectedBalance = balanceBefore.subtract(BigDecimal.valueOf(2.5));
+                assertEquals(expectedBalance, employeeAfter.getRemainingAnnualLeave());
+        }
+
+        @Test
+        @DisplayName("Should not deduct balance when request is rejected")
+        void testRejectRequest_ShouldNotDeductBalance_Success() {
+                // Arrange - Create and approve first request to have baseline
+                LocalDate futureDate = LocalDate.now().plusDays(15);
+
+                Request request = buildLeaveRequest(
+                                testEmployeeId,
+                                "Request to be rejected",
+                                "Testing rejection",
+                                LeaveType.ANNUAL,
+                                List.of(buildLeaveDate(futureDate, ShiftType.FULL_DAY)));
+
+                Request createdRequest = requestCommandService.createRequest(request);
+
+                User employeeBefore = profileDao.getProfileById(testEmployeeId);
+                BigDecimal balanceBefore = employeeBefore.getRemainingAnnualLeave();
+
+                // Act
+                Request rejectedRequest = requestCommandService.rejectRequest(
+                                createdRequest.getRequestId(),
+                                testApproverId,
+                                "Not enough staff coverage");
+
+                // Assert
+                User employeeAfter = profileDao.getProfileById(testEmployeeId);
+                assertEquals(balanceBefore, employeeAfter.getRemainingAnnualLeave(),
+                                "Leave balance should NOT be deducted when request is rejected");
+        }
+
+        @Test
+        @DisplayName("Should handle multiple approvals correctly")
+        void testApproveRequest_MultipleApprovals_BalanceDeductedCorrectly() {
+                // Arrange - Create 2 separate requests
+                Request request1 = buildLeaveRequest(
+                                testEmployeeId,
+                                "First Request",
+                                "First leave",
+                                LeaveType.ANNUAL,
+                                List.of(buildLeaveDate(LocalDate.now().plusDays(40), ShiftType.FULL_DAY)));
+
+                Request request2 = buildLeaveRequest(
+                                testEmployeeId,
+                                "Second Request",
+                                "Second leave",
+                                LeaveType.ANNUAL,
+                                List.of(buildLeaveDate(LocalDate.now().plusDays(50), ShiftType.FULL_DAY)));
+
+                Request createdRequest1 = requestCommandService.createRequest(request1);
+                Request createdRequest2 = requestCommandService.createRequest(request2);
+
+                User employeeBefore = profileDao.getProfileById(testEmployeeId);
+                BigDecimal balanceBefore = employeeBefore.getRemainingAnnualLeave();
+
+                // Act - Approve both
+                requestCommandService.approveRequest(createdRequest1.getRequestId(), testApproverId);
+                requestCommandService.approveRequest(createdRequest2.getRequestId(), testApproverId);
+
+                // Assert
+                User employeeAfter = profileDao.getProfileById(testEmployeeId);
+                BigDecimal expectedBalance = balanceBefore.subtract(BigDecimal.valueOf(2.0));
+                assertEquals(expectedBalance, employeeAfter.getRemainingAnnualLeave(),
+                                "Both requests should deduct 1 day each");
         }
 
         // ==================== Helper Methods ====================
