@@ -19,6 +19,60 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
 public class DTO {
     
     /**
+     * General DTO for all request types
+     * This DTO includes common fields for all requests and type-specific additional info
+     */
+    public record RequestDTO(
+            String requestId,
+            RequestType requestType,
+            RequestStatus status,
+            String title,
+            String userReason,
+            String rejectReason,
+            String attachmentUrl,
+            String employeeId,
+            String employeeFullName,
+            String employeeDepartmentId,
+            String employeeDepartmentName,
+            String approverId,
+            String approverFullName,
+            String processorId,
+            String processorFullName,
+            LocalDateTime processedAt,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        public static RequestDTO fromEntity(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request) {
+            if (request == null) {
+                return null;
+            }
+            
+            return new RequestDTO(
+                    request.getRequestId(),
+                    request.getRequestType(),
+                    request.getStatus(),
+                    request.getTitle(),
+                    request.getUserReason(),
+                    request.getRejectReason(),
+                    request.getAttachmentUrl(),
+                    request.getEmployee() != null ? request.getEmployee().getUserId() : null,
+                    request.getEmployee() != null ? request.getEmployee().getFullName() : null,
+                    request.getEmployee() != null && request.getEmployee().getDepartment() != null 
+                            ? request.getEmployee().getDepartment().getDepartmentId() : null,
+                    request.getEmployee() != null && request.getEmployee().getDepartment() != null 
+                            ? request.getEmployee().getDepartment().getDepartmentName() : null,
+                    request.getApprover() != null ? request.getApprover().getUserId() : null,
+                    request.getApprover() != null ? request.getApprover().getFullName() : null,
+                    request.getProcessor() != null ? request.getProcessor().getUserId() : null,
+                    request.getProcessor() != null ? request.getProcessor().getFullName() : null,
+                    request.getProcessedAt(),
+                    request.getCreatedAt(),
+                    request.getUpdatedAt()
+            );
+        }
+    }
+    
+    /**
      * DTO for leave request response
      */
     public record LeaveRequestDTO(
