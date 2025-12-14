@@ -1,7 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.request.controller.http;
 
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Response.ApiResponse;
-import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.LeaveRequestDTO;
+import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.RequestDTO;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.filter.FilterCriteria.RequestFilter;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestQueryService;
@@ -25,7 +25,7 @@ public class RequestApi {
     }
 
         @GetMapping("/my-requests")
-    public ResponseEntity<ApiResponse<Page<LeaveRequestDTO>>> getMyLeaveRequests(
+    public ResponseEntity<ApiResponse<Page<RequestDTO>>> getMyLeaveRequests(
             @Valid @ModelAttribute RequestFilter filter) {
         
         // Validate employeeId is required
@@ -37,11 +37,11 @@ public class RequestApi {
         Page<Request> requests = requestQueryService.getRequests(filter);
         
         // Convert entities to DTOs
-        Page<LeaveRequestDTO> leaveRequestDTOs = requests.map(LeaveRequestDTO::fromEntity);
+        Page<RequestDTO> requestDTOs = requests.map(RequestDTO::fromEntity);
         
         // Build response
-        ApiResponse<Page<LeaveRequestDTO>> apiResponse = new ApiResponse<>(
-                leaveRequestDTOs,
+        ApiResponse<Page<RequestDTO>> apiResponse = new ApiResponse<>(
+                requestDTOs,
                 true,
                 HttpStatus.OK.value(),
                 "My requests retrieved successfully.",
@@ -52,7 +52,7 @@ public class RequestApi {
     }
     
     @GetMapping("/team-requests")
-    public ResponseEntity<ApiResponse<Page<LeaveRequestDTO>>> getTeamLeaveRequests(
+    public ResponseEntity<ApiResponse<Page<RequestDTO>>> getTeamLeaveRequests(
             @Valid @ModelAttribute RequestFilter filter) {
         
         // Validate approverId is required
@@ -64,11 +64,11 @@ public class RequestApi {
         Page<Request> requests = requestQueryService.getRequests(filter);
         
         // Convert entities to DTOs
-        Page<LeaveRequestDTO> leaveRequestDTOs = requests.map(LeaveRequestDTO::fromEntity);
+        Page<RequestDTO> requestDTOs = requests.map(RequestDTO::fromEntity);
         
         // Build response
-        ApiResponse<Page<LeaveRequestDTO>> apiResponse = new ApiResponse<>(
-                leaveRequestDTOs,
+        ApiResponse<Page<RequestDTO>> apiResponse = new ApiResponse<>(
+                requestDTOs,
                 true,
                 HttpStatus.OK.value(),
                 "Team requests retrieved successfully.",
