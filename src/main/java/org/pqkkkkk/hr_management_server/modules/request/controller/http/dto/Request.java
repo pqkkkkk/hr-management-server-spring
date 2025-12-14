@@ -23,6 +23,36 @@ import jakarta.validation.constraints.NotNull;
  * <p> Each request DTO includes methods to convert to entity objects.
  */
 public class Request {
+    /**
+     * Request DTO for creating a check-in request
+     */
+    public record CreateCheckInRequestRequest(
+            @NotNull(message = "Desired check-in time is required")
+            java.time.LocalDateTime desiredCheckInTime,
+
+            @NotNull(message = "Current check-in time is required")
+            java.time.LocalDateTime currentCheckInTime,
+
+            @NotBlank(message = "Reason is required")
+            String reason,
+
+            String attachmentUrl
+    ) {
+        public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity(Long employeeId) {
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckInInfo additionalCheckInInfo =
+                    org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckInInfo.builder()
+                            .desiredCheckInTime(desiredCheckInTime)
+                            .currentCheckInTime(currentCheckInTime)
+                            .build();
+            return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                    .employee(org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User.builder().userId(String.valueOf(employeeId)).build())
+                    .userReason(reason)
+                    .attachmentUrl(attachmentUrl)
+                    .requestType(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType.CHECK_IN)
+                    .additionalCheckInInfo(additionalCheckInInfo)
+                    .build();
+        }
+    }
     
     /**
      * Request DTO for creating a leave request

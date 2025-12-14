@@ -17,6 +17,62 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
  * <p> Each DTO includes methods to convert to and from entity objects
  */
 public class DTO {
+    /**
+     * DTO for check-in request response
+     */
+    public record CheckInRequestDTO(
+            String requestId,
+            RequestType requestType,
+            RequestStatus status,
+            String title,
+            String userReason,
+            String rejectReason,
+            String employeeId,
+            String employeeFullName,
+            String employeeDepartmentId,
+            String employeeDepartmentName,
+            String approverId,
+            String approverFullName,
+            String processorId,
+            String processorFullName,
+            java.time.LocalDateTime processedAt,
+            java.time.LocalDateTime createdAt,
+            java.time.LocalDateTime updatedAt,
+            java.time.LocalDateTime desiredCheckInTime,
+            java.time.LocalDateTime currentCheckInTime,
+            String attachmentUrl
+    ) {
+        public static CheckInRequestDTO fromEntity(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request) {
+            java.time.LocalDateTime desiredCheckInTime = null;
+            java.time.LocalDateTime currentCheckInTime = null;
+            if (request.getAdditionalCheckInInfo() != null) {
+                desiredCheckInTime = request.getAdditionalCheckInInfo().getDesiredCheckInTime();
+                currentCheckInTime = request.getAdditionalCheckInInfo().getCurrentCheckInTime();
+            }
+            return new CheckInRequestDTO(
+                    request.getRequestId(),
+                    request.getRequestType(),
+                    request.getStatus(),
+                    request.getTitle(),
+                    request.getUserReason(),
+                    request.getRejectReason(),
+                    request.getEmployee() != null ? request.getEmployee().getUserId() : null,
+                    request.getEmployee() != null ? request.getEmployee().getFullName() : null,
+                    request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentId() : null,
+                    request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentName() : null,
+                    request.getApprover() != null ? request.getApprover().getUserId() : null,
+                    request.getApprover() != null ? request.getApprover().getFullName() : null,
+                    request.getProcessor() != null ? request.getProcessor().getUserId() : null,
+                    request.getProcessor() != null ? request.getProcessor().getFullName() : null,
+                    request.getProcessedAt(),
+                    request.getCreatedAt(),
+                    request.getUpdatedAt(),
+                    desiredCheckInTime,
+                    currentCheckInTime,
+                    request.getAttachmentUrl()
+            );
+        }
+    }
         /**
          * DTO for check-out request response
          */
