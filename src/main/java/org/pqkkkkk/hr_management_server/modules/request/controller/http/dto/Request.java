@@ -110,4 +110,34 @@ public class Request {
             @NotBlank(message = "Approver ID is required")
             String approverId
     ) {}
+        /**
+         * Request DTO for creating a check-out request
+         */
+        public record CreateCheckOutRequestRequest(
+                        @NotNull(message = "Desired check-out time is required")
+                        java.time.LocalDateTime desiredCheckOutTime,
+
+                        @NotNull(message = "Current check-out time is required")
+                        java.time.LocalDateTime currentCheckOutTime,
+
+                        @NotBlank(message = "Reason is required")
+                        String reason,
+
+                        String attachmentUrl
+        ) {
+                    public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity(Long employeeId) {
+                        org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckOutInfo additionalCheckOutInfo =
+                                org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalCheckOutInfo.builder()
+                                        .desiredCheckOutTime(desiredCheckOutTime)
+                                        .currentCheckOutTime(currentCheckOutTime)
+                                        .build();
+                        return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                                .employee(org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User.builder().userId(String.valueOf(employeeId)).build())
+                                .userReason(reason)
+                                .attachmentUrl(attachmentUrl)
+                                .requestType(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType.CHECK_OUT)
+                                .additionalCheckOutInfo(additionalCheckOutInfo)
+                                .build();
+                    }
+        }
 }
