@@ -18,8 +18,12 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestApprovedEvent;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestRejectedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -31,15 +35,18 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
     private final ProfileCommandService profileCommandService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public LeaveRequestCommandServiceImpl(
             RequestDao requestDao, 
             ProfileQueryService profileQueryService,
-            @Qualifier("profileRequestCommandService") ProfileCommandService profileCommandService
+            @Qualifier("profileRequestCommandService") ProfileCommandService profileCommandService,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
         this.profileCommandService = profileCommandService;
+        this.eventPublisher = eventPublisher;
     }
 
     private void validateLeaveRequest(Request request) {
@@ -225,13 +232,15 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         
         // Step 4: Set initial status and total days
         request.setStatus(RequestStatus.PENDING);
+        request.setCreatedAt(LocalDateTime.now());
         request.getAdditionalLeaveInfo().setTotalDays(requestedLeaveBalance);
         request.getAdditionalLeaveInfo().setRequest(request);
 
         // Step 6: Save to database
         Request createdRequest = requestDao.createRequest(request);
 
-        // TODO: Notify relevant parties (employee, manager, HR), will be implemented in future
+        // Step 7: Publish event for further processing (e.g., notifications)
+        eventPublisher.publishEvent(new RequestCreatedEvent(this, createdRequest));
 
         return createdRequest;
     }
@@ -259,8 +268,8 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         employee.setRemainingAnnualLeave(newRemainingBalance);
         profileCommandService.updateProfile(employee);
 
-        // TODO: Notify relevant parties (employee, HR), will be implemented in future
-
+        // Step 6: Publish event for further processing (e.g., notifications)
+        eventPublisher.publishEvent(new RequestApprovedEvent(this, req));
         return req;
     }
 
@@ -286,8 +295,9 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         // Step 5: Save updated request
         // JPA will automatically flush changes at transaction commit
 
-        // TODO: Notify relevant parties (employee, HR), will be implemented in future
-
+        // Step 6: Publish event for further processing (e.g., notifications)
+        eventPublisher.publishEvent(new RequestRejectedEvent(this, req));
+        
         return req;
     }
 
