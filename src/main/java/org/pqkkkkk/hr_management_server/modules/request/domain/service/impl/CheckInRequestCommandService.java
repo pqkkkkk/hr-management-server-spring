@@ -8,8 +8,10 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQu
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -18,11 +20,14 @@ import jakarta.transaction.Transactional;
 public class CheckInRequestCommandService implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
+    private final ApplicationEventPublisher eventPublisher;
     private static final LocalTime CHECK_IN_DEADLINE = LocalTime.of(8, 0); // 8:00 AM
 
-    public CheckInRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService) {
+    public CheckInRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService,
+        ApplicationEventPublisher eventPublisher) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
+        this.eventPublisher = eventPublisher;
     }
     private void validateRequestInfo(Request request) {
         // Validate request 
@@ -63,11 +68,16 @@ public class CheckInRequestCommandService implements RequestCommandService {
         // Set requestType (CHECK IN ) and status(PENDING)
         request.setRequestType(RequestType.CHECK_IN);
         request.setStatus((RequestStatus.PENDING));
+        request.setCreatedAt(LocalDateTime.now());
 
         // Link back request in additionalCheckInInfo
         request.getAdditionalCheckInInfo().setRequest(request);
 
-        return requestDao.createRequest(request);
+        Request createdRequest =requestDao.createRequest(request);
+
+        eventPublisher.publishEvent(new RequestCreatedEvent(this, createdRequest));
+
+        return createdRequest;
     }
 
     @Override

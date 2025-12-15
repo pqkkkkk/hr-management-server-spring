@@ -9,7 +9,9 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -18,11 +20,15 @@ import jakarta.transaction.Transactional;
 public class CheckOutRequestCommandService implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
+    private final ApplicationEventPublisher eventPublisher;
     private final static LocalTime CHECK_OUT_EARLY_TIME = LocalTime.of(17, 0); // 5:00 PM
 
-    public CheckOutRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService) {
+    public CheckOutRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService,
+        ApplicationEventPublisher eventPublisher
+    ) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
+        this.eventPublisher = eventPublisher;
     }
     private void validateRequestInfo(Request request) {
         // Validate request 
@@ -62,11 +68,16 @@ public class CheckOutRequestCommandService implements RequestCommandService {
         // Set requestType (CHECK OUT ) and status(PENDING)
         request.setRequestType(RequestType.CHECK_OUT);
         request.setStatus((RequestStatus.PENDING));
+        request.setCreatedAt(LocalDateTime.now());
 
         // Link back request in additionalCheckOutInfo
         request.getAdditionalCheckOutInfo().setRequest(request);
 
-        return requestDao.createRequest(request);
+        Request createdRequest = requestDao.createRequest(request);
+
+        eventPublisher.publishEvent(new RequestCreatedEvent(this, createdRequest));
+
+        return createdRequest;
     }
 
     @Override
