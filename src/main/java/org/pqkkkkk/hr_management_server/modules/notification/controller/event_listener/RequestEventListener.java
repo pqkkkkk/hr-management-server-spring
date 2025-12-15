@@ -7,7 +7,7 @@ import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Notif
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Enums.NotificationReferenceType;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Enums.NotificationType;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Notification;
-import org.pqkkkkk.hr_management_server.modules.notification.domain.service.NotificationService;
+import org.pqkkkkk.hr_management_server.modules.notification.domain.service.NotificationCommandService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestApprovedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
@@ -22,10 +22,10 @@ import org.springframework.stereotype.Component;
 public class RequestEventListener {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     
-    private final NotificationService notificationService;
+    private final NotificationCommandService notificationCommandService;
 
-    public RequestEventListener(NotificationService notificationService) {
-        this.notificationService = notificationService;
+    public RequestEventListener(NotificationCommandService notificationCommandService) {
+        this.notificationCommandService = notificationCommandService;
     }
 
     @EventListener(RequestCreatedEvent.class)
@@ -35,10 +35,10 @@ public class RequestEventListener {
         NotificationContext context = createContextFromEvent(event);
 
         // Persist notification
-        Notification notification = notificationService.createNotification(context);
+        Notification notification = notificationCommandService.createNotification(context);
 
         // Send notification
-        notificationService.sendNotification(notification);
+        notificationCommandService.sendNotification(notification);
     }
 
     @EventListener(RequestApprovedEvent.class)
@@ -48,10 +48,10 @@ public class RequestEventListener {
         NotificationContext context = createContextFromEvent(event);
 
         // Persist notification
-         Notification notification = notificationService.createNotification(context);
+         Notification notification = notificationCommandService.createNotification(context);
 
         // Send notification
-        notificationService.sendNotification(notification);
+        notificationCommandService.sendNotification(notification);
     }
 
     @EventListener(RequestRejectedEvent.class)
@@ -61,10 +61,10 @@ public class RequestEventListener {
         NotificationContext context = createContextFromEvent(event);
 
         // Persist notification
-        Notification notification = notificationService.createNotification(context);
+        Notification notification = notificationCommandService.createNotification(context);
 
         // Send notification
-        notificationService.sendNotification(notification);
+        notificationCommandService.sendNotification(notification);
     }
 
     private NotificationContext createContextFromEvent(RequestApprovedEvent event) {

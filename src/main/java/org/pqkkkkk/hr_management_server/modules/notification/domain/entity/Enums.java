@@ -17,4 +17,9 @@ public class Enums {
         REQUEST_CREATED,
         REQUEST_EXPIRED
     }
+    public enum NotificationSortingField {
+        CREATED_AT,
+        TYPE,
+        IS_READ
+    }
 }

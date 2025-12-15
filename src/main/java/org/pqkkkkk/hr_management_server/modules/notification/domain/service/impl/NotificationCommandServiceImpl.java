@@ -1,4 +1,4 @@
-package org.pqkkkkk.hr_management_server.modules.notification.domain.service;
+package org.pqkkkkk.hr_management_server.modules.notification.domain.service.impl;
 
 import java.util.List;
 import java.util.Map;
@@ -8,18 +8,19 @@ import org.pqkkkkk.hr_management_server.modules.notification.domain.dao.Notifica
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Notification;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.NotificationContext;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Enums.NotificationType;
+import org.pqkkkkk.hr_management_server.modules.notification.domain.service.NotificationCommandService;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.service.delivery.NotificationDelivery;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 
 @Service
-public class NotificationServiceImpl implements NotificationService {
+public class NotificationCommandServiceImpl implements NotificationCommandService {
     private final NotificationDao notificationDao;
     private final NotificationTemplateDao notificationTemplateDao;
     private final List<NotificationDelivery> deliveryChannels;
 
-    public NotificationServiceImpl(NotificationDao notificationDao,
+    public NotificationCommandServiceImpl(NotificationDao notificationDao,
         NotificationTemplateDao notificationTemplateDao,
         List<NotificationDelivery> deliveryChannels) {
 
@@ -66,10 +67,24 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendNotification(Notification notification) {
+    @Transactional
+    public void markAllAsRead(String recipientId) {
+        if (recipientId == null || recipientId.isBlank()) {
+            throw new IllegalArgumentException("Recipient ID is required");
+        }
 
+        Integer updatedCount = notificationDao.markAllAsRead(recipientId);
+        
+        if (updatedCount == 0) {
+            // No notifications to mark as read - this is OK, not an error
+            return;
+        }
+    }
+
+    @Override
+    public void sendNotification(Notification notification) {
         for (NotificationDelivery delivery : deliveryChannels) {
-                delivery.deliver(notification);
+            delivery.deliver(notification);
         }
     }
 
@@ -90,5 +105,4 @@ public class NotificationServiceImpl implements NotificationService {
             case REQUEST_EXPIRED -> "Yêu cầu đã hết hạn";
         };
     }
-
 }
