@@ -4,13 +4,16 @@ package org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity;
  * Enums for Timesheet module
  */
 public class Enums {
+    /**
+     * Attendance status for morning/afternoon shifts
+     * - PRESENT: Employee is present (working normally or WFH)
+     * - ABSENT: Employee is absent without approved leave
+     * - LEAVE: Employee is on approved leave (not paid)
+     */
     public enum AttendanceStatus {
-        WORKING,
+        PRESENT,
         ABSENT,
-        LEAVE_PAID,
-        LEAVE_UNPAID,
-        LATE,
-        EARLY_LEAVE
+        LEAVE
     }
     public enum TimeSheetSortingField {
         DATE ("date");
