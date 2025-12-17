@@ -98,6 +98,18 @@ public class TimesheetRequestCommandServiceImpl implements TimesheetRequestComma
         return createdRequest;
     }
 
+    @Override
+    public Request approveRequest(String requestId, String approverId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'approveRequest'");
+    }
+
+    @Override
+    public Request rejectRequest(String requestId, String approverId, String rejectionReason) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'rejectRequest'");
+    }
+
 }
 
 
