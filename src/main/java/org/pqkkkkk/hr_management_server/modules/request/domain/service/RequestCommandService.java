@@ -6,4 +6,5 @@ public interface RequestCommandService {
     public Request createRequest(Request request);
     public Request approveRequest(String requestId, String approverId);
     public Request rejectRequest(String requestId, String approverId, String rejectionReason);
+    public Request delegateRequest(String requestId, String newProcessorId);
 }

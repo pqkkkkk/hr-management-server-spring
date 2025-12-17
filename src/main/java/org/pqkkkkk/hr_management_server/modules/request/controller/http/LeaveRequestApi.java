@@ -1,9 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.request.controller.http;
 
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.LeaveRequestDTO;
-import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.ApproveRequestRequest;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.CreateLeaveRequestRequest;
-import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.RejectRequestRequest;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Response.ApiResponse;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
@@ -16,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -169,69 +165,5 @@ public class LeaveRequestApi {
         
         return ResponseEntity.ok(apiResponse);
     }
-    
-    /**
-     * PATCH /api/v1/requests/leave/{id}/approve
-     * Approve a leave request
-     * 
-     * @param id - the ID of the request to approve
-     * @param request - the approval request containing approver ID
-     * @return Approved leave request
-     */
-    @PatchMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse<LeaveRequestDTO>> approveLeaveRequest(
-            @PathVariable String id,
-            @Valid @RequestBody ApproveRequestRequest request) {
-        
-        // Approve request through service
-        Request approvedRequest = leaveRequestCommandService.approveRequest(id, request.approverId());
-        
-        // Convert entity to DTO
-        LeaveRequestDTO leaveRequestDTO = LeaveRequestDTO.fromEntity(approvedRequest);
-        
-        // Build response
-        ApiResponse<LeaveRequestDTO> apiResponse = new ApiResponse<>(
-                leaveRequestDTO,
-                true,
-                HttpStatus.OK.value(),
-                "Leave request approved successfully.",
-                null
-        );
-        
-        return ResponseEntity.ok(apiResponse);
-    }
-    
-    /**
-     * PATCH /api/v1/requests/leave/{id}/reject
-     * Reject a leave request
-     * 
-     * @param id - the ID of the request to reject
-     * @param request - the rejection request containing approver ID and reason
-     * @return Rejected leave request
-     */
-    @PatchMapping("/{id}/reject")
-    public ResponseEntity<ApiResponse<LeaveRequestDTO>> rejectLeaveRequest(
-            @PathVariable String id,
-            @Valid @RequestBody RejectRequestRequest request) {
-        
-        Request rejectedRequest = leaveRequestCommandService.rejectRequest(
-                id, 
-                request.approverId(), 
-                request.rejectReason()
-        );
-        
-        // Convert entity to DTO
-        LeaveRequestDTO leaveRequestDTO = LeaveRequestDTO.fromEntity(rejectedRequest);
-        
-        // Build response
-        ApiResponse<LeaveRequestDTO> apiResponse = new ApiResponse<>(
-                leaveRequestDTO,
-                true,
-                HttpStatus.OK.value(),
-                "Leave request rejected successfully.",
-                null
-        );
-        
-        return ResponseEntity.ok(apiResponse);
-    }
+
 }

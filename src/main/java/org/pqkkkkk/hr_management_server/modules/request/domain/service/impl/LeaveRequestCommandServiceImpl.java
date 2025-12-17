@@ -22,6 +22,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestAppr
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestRejectedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestDelegationService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -36,17 +37,20 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     private final ProfileQueryService profileQueryService;
     private final ProfileCommandService profileCommandService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RequestDelegationService delegationService;
 
     public LeaveRequestCommandServiceImpl(
             RequestDao requestDao, 
             ProfileQueryService profileQueryService,
             @Qualifier("profileRequestCommandService") ProfileCommandService profileCommandService,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            RequestDelegationService delegationService
     ) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
         this.profileCommandService = profileCommandService;
         this.eventPublisher = eventPublisher;
+        this.delegationService = delegationService;
     }
 
     private void validateLeaveRequest(Request request) {
@@ -322,6 +326,11 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         if(!approverId.equals(actualApproverId) && !approverId.equals(actualProcessorId)) {
             throw new SecurityException("Approver does not have permission to perform this action.");
         }
+    }
+
+    @Override
+    public Request delegateRequest(String requestId, String newProcessorId) {
+        return delegationService.delegateRequest(requestId, newProcessorId);
     }
 
 }
