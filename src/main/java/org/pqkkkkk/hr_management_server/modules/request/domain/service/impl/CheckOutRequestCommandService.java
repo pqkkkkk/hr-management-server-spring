@@ -11,6 +11,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestDelegationService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -21,14 +22,16 @@ public class CheckOutRequestCommandService implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RequestDelegationService delegationService;
     private final static LocalTime CHECK_OUT_EARLY_TIME = LocalTime.of(17, 0); // 5:00 PM
 
     public CheckOutRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService,
-        ApplicationEventPublisher eventPublisher
+        ApplicationEventPublisher eventPublisher, RequestDelegationService delegationService
     ) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
         this.eventPublisher = eventPublisher;
+        this.delegationService = delegationService;
     }
     private void validateRequestInfo(Request request) {
         // Validate request 
@@ -90,6 +93,11 @@ public class CheckOutRequestCommandService implements RequestCommandService {
     public Request rejectRequest(String requestId, String approverId, String rejectionReason) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rejectRequest'");
+    }
+
+    @Override
+    public Request delegateRequest(String requestId, String newProcessorId) {
+        return delegationService.delegateRequest(requestId, newProcessorId);
     }
 
 }
