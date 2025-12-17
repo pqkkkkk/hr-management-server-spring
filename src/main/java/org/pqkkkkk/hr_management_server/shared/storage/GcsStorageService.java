@@ -46,7 +46,7 @@ public class GcsStorageService implements StorageService {
             log.info("File uploaded successfully to GCS: {}", fileName);
             
             // Generate signed URL (valid for 7 days)
-            String signedUrl = generateSignedUrl(blobId);
+            String signedUrl = generatePublicUrl(blobId);
             
             return signedUrl;
         } catch (Exception e) {
@@ -89,7 +89,10 @@ public class GcsStorageService implements StorageService {
                     blobId.getBucket(), blobId.getName());
         }
     }
-
+    private String generatePublicUrl(BlobId blobId) {
+        return String.format("https://storage.googleapis.com/%s/%s", 
+                blobId.getBucket(), blobId.getName());
+    }
     /**
      * Delete a file from GCS (optional utility method)
      */

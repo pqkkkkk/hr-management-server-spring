@@ -1,6 +1,10 @@
 spring:
     application:
         name: hr-management-server
+    servlet:
+        multipart:
+            max-file-size: 10MB
+            max-request-size: 20MB
     datasource:
         url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/hr_management_db_dev}
         username: ${DATABASE_USERNAME:postgres}
