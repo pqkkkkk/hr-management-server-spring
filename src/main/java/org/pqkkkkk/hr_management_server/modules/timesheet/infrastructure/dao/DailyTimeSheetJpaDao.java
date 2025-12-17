@@ -61,10 +61,10 @@ public class DailyTimeSheetJpaDao implements DailyTimeSheetDao {
             String employeeId,
             LocalDate startDate,
             LocalDate endDate) {
-        Object[] result = repository.getAttendanceStatistics(employeeId, startDate, endDate);
+        Object[] result = (Object[]) repository.getAttendanceStatistics(employeeId, startDate, endDate)[0];
         
         Map<String, Object> statistics = new HashMap<>();
-        if (result != null && result.length > 0) {
+        if (result != null && result.length >= 7) {
             statistics.put("totalDays", result[0]);
             statistics.put("morningPresent", result[1]);
             statistics.put("afternoonPresent", result[2]);

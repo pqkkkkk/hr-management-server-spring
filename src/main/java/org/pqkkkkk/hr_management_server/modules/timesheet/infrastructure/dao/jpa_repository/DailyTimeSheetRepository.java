@@ -44,7 +44,7 @@ public interface DailyTimeSheetRepository extends JpaRepository<DailyTimeSheet, 
                 COALESCE(SUM(late_minutes), 0) as total_late_minutes,
                 COALESCE(SUM(overtime_minutes), 0) as total_overtime_minutes,
                 COALESCE(SUM(total_work_credit), 0) as total_work_credit
-            FROM daily_timesheet
+            FROM daily_timesheet_table
             WHERE employee_id = :userId
             AND date BETWEEN :startDate AND :endDate
             """, nativeQuery = true)
