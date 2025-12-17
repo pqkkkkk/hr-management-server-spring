@@ -69,8 +69,6 @@ public class RequestDelegationService {
         request.setProcessor(newProcessor);
         request.setUpdatedAt(LocalDateTime.now());
 
-        // No need to call dao.updateRequest() - Hibernate will auto-detect changes
-        // and persist them when transaction commits (dirty checking mechanism)
         return request;
     }
 }
