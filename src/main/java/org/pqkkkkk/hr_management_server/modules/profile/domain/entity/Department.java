@@ -12,13 +12,19 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "department_table")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"members"})
+@EqualsAndHashCode(exclude = {"members"})
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

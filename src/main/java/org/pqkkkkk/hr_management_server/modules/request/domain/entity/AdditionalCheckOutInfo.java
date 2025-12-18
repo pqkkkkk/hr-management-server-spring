@@ -12,13 +12,19 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "additional_checkout_info_table")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"request"})
+@EqualsAndHashCode(exclude = {"request"})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class NotificationContext {
     String recipientId;
+    String userRole;
     NotificationType type;
     NotificationReferenceType referenceType;
     String referenceId;

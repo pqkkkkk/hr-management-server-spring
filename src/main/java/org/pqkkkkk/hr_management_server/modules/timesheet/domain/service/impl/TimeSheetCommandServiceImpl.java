@@ -45,14 +45,14 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException(Constants.ERROR_NULL_TIME);
         }
         
-        // Validate and get employee
-        User employee = validateAndGetEmployee(employeeId);
+        // Validate employee exists
+        validateAndGetEmployee(employeeId);
         
         // Get check-in date
         LocalDate checkInDate = checkInTime.toLocalDate();
         
         // Get or create timesheet for the date
-        DailyTimeSheet timeSheet = getOrCreateTimeSheet(employee, checkInDate);
+        DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, checkInDate);
         
         // Set check-in time
         timeSheet.setCheckInTime(checkInTime);
@@ -77,15 +77,15 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException(Constants.ERROR_NULL_TIME);
         }
         
-        // Validate and get employee
-        User employee = validateAndGetEmployee(employeeId);
+        // Validate employee exists
+        validateAndGetEmployee(employeeId);
         
         // Get check-out date
         LocalDate checkOutDate = checkOutTime.toLocalDate();
         
         // Get existing timesheet (must exist with check-in)
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employee.getUserId(), 
+            employeeId, 
             checkOutDate
         );
         
@@ -136,8 +136,8 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException("Leave dates cannot be null or empty");
         }
         
-        // Validate and get employee
-        User employee = validateAndGetEmployee(employeeId);
+        // Validate employee exists (without loading the full entity)
+        validateAndGetEmployee(employeeId);
         
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
         
@@ -147,8 +147,8 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
                 throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
             }
             
-            // Get or create timesheet for the date
-            DailyTimeSheet timeSheet = getOrCreateTimeSheet(employee, leaveDate.getDate());
+            // Get or create timesheet for the date (pass userId only to avoid circular reference)
+            DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, leaveDate.getDate());
             
             // Set attendance status based on shift type
             ShiftType shift = leaveDate.getShift();
@@ -186,8 +186,8 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException("WFH dates cannot be null or empty");
         }
         
-        // Validate and get employee
-        User employee = validateAndGetEmployee(employeeId);
+        // Validate employee exists
+        validateAndGetEmployee(employeeId);
         
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
         
@@ -197,8 +197,8 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
                 throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
             }
             
-            // Get or create timesheet for the date
-            DailyTimeSheet timeSheet = getOrCreateTimeSheet(employee, wfhDate.getDate());
+            // Get or create timesheet for the date (pass userId only to avoid circular reference)
+            DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, wfhDate.getDate());
             
             // Set WFH flags and attendance status based on shift type
             ShiftType shift = wfhDate.getShift();
@@ -271,12 +271,12 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException(Constants.ERROR_INVALID_TIME_RANGE);
         }
         
-        // Validate and get employee
-        User employee = validateAndGetEmployee(employeeId);
+        // Validate employee exists
+        validateAndGetEmployee(employeeId);
         
         // Get existing timesheet (must exist)
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employee.getUserId(), 
+            employeeId, 
             targetDate
         );
         
@@ -356,19 +356,21 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
     /**
      * Gets existing timesheet or creates a new one for the specified employee and date.
      * 
-     * @param employee Employee entity
+     * @param employeeId Employee user ID
      * @param date Date for the timesheet
      * @return Existing or newly created DailyTimeSheet
      */
-    private DailyTimeSheet getOrCreateTimeSheet(User employee, LocalDate date) {
+    private DailyTimeSheet getOrCreateTimeSheet(String employeeId, LocalDate date) {
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employee.getUserId(), 
+            employeeId, 
             date
         );
         
         if (timeSheet == null) {
+            // Create a new timesheet with employee reference (let JPA manage the relationship)
+            User employeeRef = User.builder().userId(employeeId).build();
             timeSheet = DailyTimeSheet.builder()
-                .employee(employee)
+                .employee(employeeRef)
                 .date(date)
                 .isFinalized(false)
                 .totalWorkCredit(Constants.ZERO_WORK_CREDIT)
