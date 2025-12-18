@@ -1,4 +1,4 @@
-package org.pqkkkkk.hr_management_server.modules.notification.infrastructure;
+package org.pqkkkkk.hr_management_server.modules.notification.infrastructure.dao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,6 @@ import org.pqkkkkk.hr_management_server.modules.notification.domain.dao.Notifica
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Notification;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Enums.NotificationSortingField;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.filter.FilterCriteria.NotificationFilter;
-import org.pqkkkkk.hr_management_server.modules.notification.infrastructure.dao.NotificationRepository;
 import org.pqkkkkk.hr_management_server.shared.Constants.SortDirection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
