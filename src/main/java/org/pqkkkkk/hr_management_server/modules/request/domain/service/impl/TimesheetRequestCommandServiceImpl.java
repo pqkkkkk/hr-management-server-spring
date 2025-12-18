@@ -7,7 +7,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
-import org.pqkkkkk.hr_management_server.modules.request.domain.service.TimesheetRequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Service
-public class TimesheetRequestCommandServiceImpl implements TimesheetRequestCommandService {
+public class TimesheetRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
     private final ApplicationEventPublisher eventPublisher;
