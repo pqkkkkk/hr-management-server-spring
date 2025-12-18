@@ -9,7 +9,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalWfhInfo;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.WfhDate;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
-import org.pqkkkkk.hr_management_server.modules.request.domain.service.WfhRequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.springframework.stereotype.Service;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Service
-public class WfhRequestCommandServiceImpl implements WfhRequestCommandService {
+public class WfhRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
     private final ApplicationEventPublisher eventPublisher;
