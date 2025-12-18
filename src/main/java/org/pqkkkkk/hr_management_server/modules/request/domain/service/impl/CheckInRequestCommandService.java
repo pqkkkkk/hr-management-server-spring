@@ -8,9 +8,14 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQu
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestApprovedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
+import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestRejectedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestDelegationService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestValidationService;
+import org.pqkkkkk.hr_management_server.modules.timesheet.domain.service.TimeSheetCommandService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +26,20 @@ public class CheckInRequestCommandService implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RequestDelegationService delegationService;
+    private final TimeSheetCommandService timeSheetCommandService;
+    private final RequestValidationService requestValidationService;
     private static final LocalTime CHECK_IN_DEADLINE = LocalTime.of(8, 0); // 8:00 AM
 
     public CheckInRequestCommandService(RequestDao requestDao, ProfileQueryService profileQueryService,
-        ApplicationEventPublisher eventPublisher) {
+        ApplicationEventPublisher eventPublisher, RequestDelegationService delegationService,
+        TimeSheetCommandService timeSheetCommandService, RequestValidationService requestValidationService) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
         this.eventPublisher = eventPublisher;
+        this.delegationService = delegationService;
+        this.timeSheetCommandService = timeSheetCommandService;
+        this.requestValidationService = requestValidationService;
     }
     private void validateRequestInfo(Request request) {
         // Validate request 
@@ -81,15 +93,44 @@ public class CheckInRequestCommandService implements RequestCommandService {
     }
 
     @Override
+    @Transactional
     public Request approveRequest(String requestId, String approverId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'approveRequest'");
+        Request req = requestValidationService.checkRequestIsValid(requestId);
+
+        requestValidationService.checkApproverPermissions(approverId, req);
+
+        req.setStatus(RequestStatus.APPROVED);
+        req.setProcessedAt(LocalDateTime.now());
+
+        timeSheetCommandService.handleCheckInApproval(req.getEmployee().getUserId(), req.getAdditionalCheckInInfo().getDesiredCheckInTime());
+
+        eventPublisher.publishEvent(new RequestApprovedEvent(this, req));
+
+        return req;
     }
 
     @Override
     public Request rejectRequest(String requestId, String approverId, String rejectionReason) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'rejectRequest'");
+        Request req = requestValidationService.checkRequestIsValid(requestId);
+
+        requestValidationService.checkApproverPermissions(approverId, req);
+
+        if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Rejection reason is required when rejecting a request.");
+        }
+
+        req.setStatus(RequestStatus.REJECTED);
+        req.setProcessedAt(LocalDateTime.now());
+        req.setRejectReason(rejectionReason);
+
+        eventPublisher.publishEvent(new RequestRejectedEvent(this, req));
+
+        return req;
+    }
+
+    @Override
+    public Request delegateRequest(String requestId, String newProcessorId) {
+        return delegationService.delegateRequest(requestId, newProcessorId);
     }
     
 }

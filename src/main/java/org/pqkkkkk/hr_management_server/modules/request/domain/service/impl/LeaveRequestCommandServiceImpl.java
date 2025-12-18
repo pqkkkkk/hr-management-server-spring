@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User;
-import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileCommandService;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.service.ProfileQueryService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
@@ -22,7 +21,9 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestAppr
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestCreatedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.event.RequestRejectedEvent;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestDelegationService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestValidationService;
+import org.pqkkkkk.hr_management_server.modules.timesheet.domain.service.TimeSheetCommandService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -34,19 +35,25 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Constants;
 public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
-    private final ProfileCommandService profileCommandService;
+    private final RequestValidationService requestValidationService;
+    private final TimeSheetCommandService timeSheetCommandService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RequestDelegationService delegationService;
 
     public LeaveRequestCommandServiceImpl(
             RequestDao requestDao, 
             ProfileQueryService profileQueryService,
-            @Qualifier("profileRequestCommandService") ProfileCommandService profileCommandService,
-            ApplicationEventPublisher eventPublisher
+            ApplicationEventPublisher eventPublisher,
+            RequestDelegationService delegationService,
+            RequestValidationService requestValidationService,
+            TimeSheetCommandService timeSheetCommandService
     ) {
         this.requestDao = requestDao;
         this.profileQueryService = profileQueryService;
-        this.profileCommandService = profileCommandService;
         this.eventPublisher = eventPublisher;
+        this.requestValidationService = requestValidationService;                   
+        this.delegationService = delegationService;
+        this.timeSheetCommandService = timeSheetCommandService;
     }
 
     private void validateLeaveRequest(Request request) {
@@ -249,10 +256,10 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     @Transactional
     public Request approveRequest(String requestId, String approverId) {
         // Step 1: Validate request exists and is in valid state
-        Request req = checkRequestIsValid(requestId);
+        Request req = requestValidationService.checkRequestIsValid(requestId);
 
         // Step 2: Verify approver has permission
-        checkApproverPermissions(approverId, req);
+        requestValidationService.checkApproverPermissions(approverId, req);
 
         // Step 3: Update request status and timestamp
         req.setStatus(RequestStatus.APPROVED);
@@ -266,7 +273,8 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         User employee = profileQueryService.getProfileById(req.getEmployee().getUserId());
         BigDecimal newRemainingBalance = employee.getRemainingAnnualLeave().subtract(requestedLeaveBalance);
         employee.setRemainingAnnualLeave(newRemainingBalance);
-        profileCommandService.updateProfile(employee);
+
+        timeSheetCommandService.handleLeaveApproval(employee.getUserId(), req.getAdditionalLeaveInfo().getLeaveDates());
 
         // Step 6: Publish event for further processing (e.g., notifications)
         eventPublisher.publishEvent(new RequestApprovedEvent(this, req));
@@ -277,10 +285,10 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
     @Transactional
     public Request rejectRequest(String requestId, String approverId, String rejectionReason) {
         // Step 1: Validate request exists and is in valid state
-        Request req = checkRequestIsValid(requestId);
+        Request req = requestValidationService.checkRequestIsValid(requestId);
 
         // Step 2: Verify approver has permission
-        checkApproverPermissions(approverId, req);
+        requestValidationService.checkApproverPermissions(approverId, req);
 
         // Step 3: Validate rejection reason
         if (rejectionReason == null || rejectionReason.trim().isEmpty()) {
@@ -301,27 +309,9 @@ public class LeaveRequestCommandServiceImpl implements RequestCommandService {
         return req;
     }
 
-    private Request checkRequestIsValid(String requestId) {
-        Request existingRequest = requestDao.getRequestById(requestId);
-
-        if (existingRequest == null) {
-            throw new IllegalArgumentException("Request does not exist.");
-        }
-
-        if(existingRequest.getStatus() != RequestStatus.PENDING) {
-            throw new IllegalStateException("Request is not in a valid state for this operation.");
-        }
-
-        return existingRequest;
-    }
-
-    private void checkApproverPermissions(String approverId, Request request) {
-        String actualApproverId = request.getApprover() == null ? null : request.getApprover().getUserId();
-        String actualProcessorId = request.getProcessor() == null ? null : request.getProcessor().getUserId();
-
-        if(!approverId.equals(actualApproverId) && !approverId.equals(actualProcessorId)) {
-            throw new SecurityException("Approver does not have permission to perform this action.");
-        }
+    @Override
+    public Request delegateRequest(String requestId, String newProcessorId) {
+        return delegationService.delegateRequest(requestId, newProcessorId);
     }
 
 }

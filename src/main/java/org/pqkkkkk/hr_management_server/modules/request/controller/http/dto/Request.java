@@ -99,19 +99,29 @@ public class Request {
      * Request DTO for rejecting a request
      */
     public record RejectRequestRequest(
-            @NotBlank(message = "Reject reason is required")
-            String rejectReason,
-            
-            @NotBlank(message = "Approver ID is required")
-            String approverId
+        @NotBlank(message = "Rejecter ID is required")
+        @NotNull(message = "Rejecter ID cannot be null")
+        String rejecterId,
+        @NotBlank(message = "Reject reason is required")
+        String rejectReason
     ) {}
     
     /**
      * Request DTO for approving a request
      */
     public record ApproveRequestRequest(
-            @NotBlank(message = "Approver ID is required")
-            String approverId
+        @NotBlank(message = "Approver ID is required")
+        @NotNull(message = "Approver ID cannot be null")
+        String approverId
+    ) {}
+    
+    /**
+     * Request DTO for delegating a request to another processor
+     */
+    public record DelegateRequestRequest(
+            @NotBlank(message = "New processor ID is required")
+            @NotNull(message = "New processor ID cannot be null")
+            String newProcessorId
     ) {}
     
     /**

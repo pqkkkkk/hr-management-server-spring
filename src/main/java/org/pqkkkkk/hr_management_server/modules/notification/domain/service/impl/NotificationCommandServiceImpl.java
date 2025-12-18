@@ -7,21 +7,24 @@ import org.pqkkkkk.hr_management_server.modules.notification.domain.dao.Notifica
 import org.pqkkkkk.hr_management_server.modules.notification.domain.dao.NotificationTemplateDao;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Notification;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.NotificationContext;
-import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.Enums.NotificationType;
+import org.pqkkkkk.hr_management_server.modules.notification.domain.entity.NotificationTemplate;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.service.NotificationCommandService;
 import org.pqkkkkk.hr_management_server.modules.notification.domain.service.delivery.NotificationDelivery;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class NotificationCommandServiceImpl implements NotificationCommandService {
     private final NotificationDao notificationDao;
     private final NotificationTemplateDao notificationTemplateDao;
     private final List<NotificationDelivery> deliveryChannels;
 
     public NotificationCommandServiceImpl(NotificationDao notificationDao,
-        NotificationTemplateDao notificationTemplateDao,
+        @Qualifier("notificationTemplateJpaDao") NotificationTemplateDao notificationTemplateDao,
         List<NotificationDelivery> deliveryChannels) {
 
         this.notificationDao = notificationDao;
@@ -32,17 +35,23 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     @Override
     @Transactional
     public Notification createNotification(NotificationContext context) {
-        String template = notificationTemplateDao.getTemplateByType(context.getType().name());
+        NotificationTemplate template = notificationTemplateDao.getTemplateByTypeAndUserRole(
+            context.getType().name(),
+            context.getUserRole()
+        );
 
-        // Generate title from notification type
-        String title = generateTitle(context.getType());
+        if (template == null) {
+            // Graceful behavior: if there is no template configured, skip creating notification
+            log.debug("No active notification template found for type: {} and user role: {}", context.getType(), context.getUserRole());
+            return null;
+        }
 
         // Modify template with context data
-        String message = formatTemplate(template, context.getTemplateData());
+        String message = formatTemplate(template.getMessageTemplate(), context.getTemplateData());
 
         // Create Notification entity and persist it
         Notification notification = Notification.builder()
-            .title(title)
+            .title(template.getTitleTemplate())
             .type(context.getType())
             .referenceType(context.getReferenceType())
             .referenceId(context.getReferenceId())
@@ -89,20 +98,27 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     }
 
     private String formatTemplate(String template, Map<String, Object> data) {
-        // Simple template formatting: "Hello {name}" with data {name: "John"} -> "Hello John"
-        String result = template;
-        for (Map.Entry<String, Object> entry : data.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue().toString());
-        }
-        return result;
-    }
+        if (template == null) return "";
 
-    private String generateTitle(NotificationType type) {
-        return switch (type) {
-            case REQUEST_APPROVED -> "Yêu cầu đã được phê duyệt";
-            case REQUEST_REJECTED -> "Yêu cầu bị từ chối";
-            case REQUEST_CREATED -> "Yêu cầu mới được tạo";
-            case REQUEST_EXPIRED -> "Yêu cầu đã hết hạn";
-        };
+        // Find placeholders like {key}
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\{([^}]+)\\}");
+        java.util.regex.Matcher matcher = pattern.matcher(template);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            Object value = (data == null) ? null : data.get(key);
+            if (value == null) {
+                // graceful: replace missing/ null with empty string and warn
+                matcher.appendReplacement(sb, "");
+                log.warn("Missing template key '{}' while formatting notification", key);
+            } else {
+                // escape replacement to avoid group references
+                String replacement = java.util.regex.Matcher.quoteReplacement(value.toString());
+                matcher.appendReplacement(sb, replacement);
+            }
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }

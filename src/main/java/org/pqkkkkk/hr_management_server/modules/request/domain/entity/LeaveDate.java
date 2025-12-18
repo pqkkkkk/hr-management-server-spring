@@ -17,8 +17,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 
 @Entity
@@ -26,7 +29,10 @@ import lombok.experimental.FieldDefaults;
     name = "leave_dates_table",
     uniqueConstraints = @UniqueConstraint(columnNames = {"request_id", "date"})
 )
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"additionalLeaveInfo"})
+@EqualsAndHashCode(exclude = {"additionalLeaveInfo"})
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
