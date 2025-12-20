@@ -36,8 +36,8 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "user_table")
 @Getter
 @Setter
-@ToString(exclude = {"manager", "subordinates"})
-@EqualsAndHashCode(exclude = {"manager", "subordinates"})
+@ToString(exclude = { "manager", "subordinates" })
+@EqualsAndHashCode(exclude = { "manager", "subordinates" })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -121,11 +121,11 @@ public class User {
     BigDecimal remainingAnnualLeave = new BigDecimal("12.0");
 
     // Work From Home (WFH) days balance
-    @Column(name = "max_wfh_days")
+    @Column(name = "max_wfh_days", precision = 4, scale = 1)
     @Builder.Default
-    Integer maxWfhDays = 10;
+    BigDecimal maxWfhDays = new BigDecimal("10.0");
 
-    @Column(name = "remaining_wfh_days")
+    @Column(name = "remaining_wfh_days", precision = 4, scale = 1)
     @Builder.Default
-    Integer remainingWfhDays = 10;
+    BigDecimal remainingWfhDays = new BigDecimal("10.0");
 }
