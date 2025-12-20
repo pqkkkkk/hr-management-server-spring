@@ -58,7 +58,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_NoFilters_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -75,7 +75,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByEmployeeId_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                testEmployeeId, null, null, null, null, null, null,
+                testEmployeeId, null, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -92,7 +92,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByApproverId_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, testApproverId, null, null, null, null, null,
+                null, testApproverId, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -112,7 +112,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByProcessorId_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, testProcessorId, null, null, null, null,
+                null, null, testProcessorId, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -132,7 +132,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByDepartmentId_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, testDepartmentId, null, null, null,
+                null, null, null, testDepartmentId, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -151,7 +151,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByStatus_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, RequestStatus.PENDING, null, null,
+                null, null, null, null, null, RequestStatus.PENDING, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -168,7 +168,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_FilterByType_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, null, RequestType.LEAVE, null,
+                null, null, null, null, null, null, RequestType.LEAVE, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -181,6 +181,63 @@ class RequestQueryServiceImplIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should filter requests by employee name (partial match)")
+    void testGetRequests_FilterByNameTerm_Success() {
+        // Arrange - Search for employees with "Nguyen" in their name
+        RequestFilter filter = new RequestFilter(
+                null, null, null, null, "Nguyen", null, null, null,
+                null, 1, 10, "createdAt", SortDirection.DESC);
+
+        // Act
+        Page<Request> result = requestQueryService.getRequests(filter);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.getTotalElements() > 0);
+        result.getContent().forEach(request -> {
+            assertNotNull(request.getEmployee());
+            assertTrue(request.getEmployee().getFullName().toLowerCase().contains("nguyen"));
+        });
+    }
+
+    @Test
+    @DisplayName("Should filter requests by employee name (case-insensitive)")
+    void testGetRequests_FilterByNameTerm_CaseInsensitive_Success() {
+        // Arrange - Search with different case
+        RequestFilter filter = new RequestFilter(
+                null, null, null, null, "NGUYEN", null, null, null,
+                null, 1, 10, "createdAt", SortDirection.DESC);
+
+        // Act
+        Page<Request> result = requestQueryService.getRequests(filter);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.getTotalElements() > 0);
+        result.getContent().forEach(request -> {
+            assertNotNull(request.getEmployee());
+            assertTrue(request.getEmployee().getFullName().toLowerCase().contains("nguyen"));
+        });
+    }
+
+    @Test
+    @DisplayName("Should return empty page when name term does not match any employee")
+    void testGetRequests_FilterByNameTerm_NoMatch_EmptyPage() {
+        // Arrange - Search for a name that doesn't exist
+        RequestFilter filter = new RequestFilter(
+                null, null, null, null, "XYZNonExistentName", null, null, null,
+                null, 1, 10, "createdAt", SortDirection.DESC);
+
+        // Act
+        Page<Request> result = requestQueryService.getRequests(filter);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+        assertTrue(result.getContent().isEmpty());
+    }
+
+    @Test
     @DisplayName("Should filter requests by date range")
     void testGetRequests_FilterByDateRange_Success() {
         // Arrange
@@ -188,7 +245,7 @@ class RequestQueryServiceImplIntegrationTest {
         LocalDate endDate = LocalDate.now().plusDays(10);
 
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, null, null, startDate,
+                null, null, null, null, null, null, null, startDate,
                 endDate, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -210,6 +267,7 @@ class RequestQueryServiceImplIntegrationTest {
         // Arrange
         RequestFilter filter = new RequestFilter(
                 testEmployeeId,
+                null,
                 null,
                 null,
                 null,
@@ -239,7 +297,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_NoMatchingRequests_EmptyPage() {
         // Arrange - Using a non-existent employee ID
         RequestFilter filter = new RequestFilter(
-                "non-existent-id", null, null, null, null, null, null,
+                "non-existent-id", null, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -256,7 +314,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_SortAscending_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.ASC);
 
         // Act
@@ -280,7 +338,7 @@ class RequestQueryServiceImplIntegrationTest {
     void testGetRequests_SortDescending_Success() {
         // Arrange
         RequestFilter filter = new RequestFilter(
-                null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
                 null, 1, 10, "createdAt", SortDirection.DESC);
 
         // Act
@@ -400,6 +458,7 @@ class RequestQueryServiceImplIntegrationTest {
                 null,
                 null,
                 null,
+                null,
                 1,
                 10,
                 "createdAt",
@@ -422,6 +481,7 @@ class RequestQueryServiceImplIntegrationTest {
                 testApproverId, // Requests where this user is approver
                 null,
                 testDepartmentId, // From their department
+                null,
                 RequestStatus.PENDING, // Only pending
                 null,
                 null,
@@ -456,6 +516,7 @@ class RequestQueryServiceImplIntegrationTest {
                 null,
                 null,
                 null,
+                null,
                 1,
                 10,
                 "createdAt",
@@ -480,6 +541,7 @@ class RequestQueryServiceImplIntegrationTest {
         LocalDate endDate = LocalDate.now().plusDays(30);
 
         RequestFilter filter = new RequestFilter(
+                null,
                 null,
                 null,
                 null,

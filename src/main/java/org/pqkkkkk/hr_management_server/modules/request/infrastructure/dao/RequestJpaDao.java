@@ -96,6 +96,13 @@ public class RequestJpaDao implements RequestDao {
                         filter.departmentId()));
             }
 
+            // Filter by employee name (LIKE search, case-insensitive)
+            if (filter.nameTerm() != null && !filter.nameTerm().isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("employee").get("fullName")),
+                        "%" + filter.nameTerm().toLowerCase() + "%"));
+            }
+
             // Filter by request status
             if (filter.status() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), filter.status()));
