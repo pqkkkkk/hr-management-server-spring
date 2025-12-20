@@ -4,10 +4,14 @@ import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.CreateTimeSheetRequestRequest;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Response.ApiResponse;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
+import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestQueryService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,10 +28,41 @@ import jakarta.validation.Valid;
 public class TimeSheetRequestApi {
 
         private final RequestCommandService timeSheetRequestCommandService;
+        private final RequestQueryService requestQueryService;
 
         public TimeSheetRequestApi(
-                        @Qualifier("timesheetRequestCommandServiceImpl") RequestCommandService timeSheetRequestCommandService) {
+                        @Qualifier("timesheetRequestCommandServiceImpl") RequestCommandService timeSheetRequestCommandService,
+                        RequestQueryService requestQueryService) {
                 this.timeSheetRequestCommandService = timeSheetRequestCommandService;
+                this.requestQueryService = requestQueryService;
+        }
+
+        /**
+         * GET /api/v1/requests/timesheet/{requestId}
+         * Get a timesheet request by ID
+         * 
+         * @param requestId - the ID of the request
+         * @return Timesheet request details
+         */
+        @GetMapping("/{requestId}")
+        public ResponseEntity<ApiResponse<TimeSheetRequestDTO>> getTimeSheetRequest(@PathVariable String requestId) {
+                Request request = requestQueryService.getRequestById(requestId);
+
+                if (request.getRequestType() != RequestType.TIMESHEET) {
+                        throw new IllegalArgumentException(
+                                        "Request with ID " + requestId + " is not a TIMESHEET request");
+                }
+
+                TimeSheetRequestDTO timeSheetRequestDTO = TimeSheetRequestDTO.fromEntity(request);
+
+                ApiResponse<TimeSheetRequestDTO> apiResponse = new ApiResponse<>(
+                                timeSheetRequestDTO,
+                                true,
+                                HttpStatus.OK.value(),
+                                "Timesheet request retrieved successfully.",
+                                null);
+
+                return ResponseEntity.ok(apiResponse);
         }
 
         /**
