@@ -19,6 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request DTOs for Request module (Leave Requests).
@@ -173,6 +174,56 @@ public class Request {
                     .employee(User.builder().userId(employeeId).build())
                     .additionalCheckOutInfo(additionalCheckOutInfo)
                     .build();
+        }
+    }
+    
+    /**
+     * Request DTO for creating a remote work request
+     */
+    public record CreateRemoteWorkRequestRequest(
+            @NotNull(message = "Work date is required")
+            @jakarta.validation.constraints.FutureOrPresent(message = "Work date must be today or in the future")
+            LocalDate workDate,
+
+            @NotBlank(message = "Reason is required")
+            @Size(min = 10, max = 500, message = "Reason must be 10-500 characters")
+            String reason,
+
+            @NotBlank(message = "Employee ID is required")
+            String employeeId
+    ) {
+        public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity() {
+            // Build AdditionalWfhInfo
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalWfhInfo additionalWfhInfo = org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalWfhInfo.builder()
+                .wfhCommitment(false)
+                .workLocation(null)
+                .totalDays(java.math.BigDecimal.ONE)
+                .wfhDates(new java.util.ArrayList<>())
+                .build();
+
+            // Build WfhDate entity
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.WfhDate wfhDate = org.pqkkkkk.hr_management_server.modules.request.domain.entity.WfhDate.builder()
+                .date(workDate)
+                .shift(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType.FULL_DAY)
+                .build();
+            additionalWfhInfo.addWfhDate(wfhDate);
+
+            // Build User entity
+            org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User employee = org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User.builder()
+                .userId(employeeId)
+                .build();
+
+            // Build Request entity
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request = org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                .requestType(RequestType.WFH)
+                .userReason(reason)
+                .employee(employee)
+                .additionalWfhInfo(additionalWfhInfo)
+                .build();
+
+            // Set bidirectional relationship
+            additionalWfhInfo.setRequest(request);
+            return request;
         }
     }
 }

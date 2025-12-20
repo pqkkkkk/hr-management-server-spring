@@ -285,4 +285,38 @@ public class DTO {
             );
         }
     }
+    
+    /**
+     * Response DTO for remote work request
+     */
+    public record RemoteWorkRequestDTO(
+            String requestId,
+            String employeeId,
+            String employeeFullName,
+            String employeeDepartmentId,
+            String employeeDepartmentName,
+            java.time.LocalDate workDate,
+            String reason,
+            String status,
+            java.time.LocalDateTime createdAt,
+            java.time.LocalDateTime updatedAt
+    ) {
+        public static RemoteWorkRequestDTO fromEntity(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request) {
+            if (request == null || request.getAdditionalWfhInfo() == null || request.getAdditionalWfhInfo().getWfhDates().isEmpty()) return null;
+            var info = request.getAdditionalWfhInfo();
+            var wfhDate = info.getWfhDates().get(0);
+            return new RemoteWorkRequestDTO(
+                request.getRequestId(),
+                request.getEmployee() != null ? request.getEmployee().getUserId() : null,
+                request.getEmployee() != null ? request.getEmployee().getFullName() : null,
+                request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentId() : null,
+                request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentName() : null,
+                wfhDate.getDate(),
+                request.getUserReason(),
+                request.getStatus() != null ? request.getStatus().name() : null,
+                request.getCreatedAt(),
+                request.getUpdatedAt()
+            );
+        }
+    }
 }
