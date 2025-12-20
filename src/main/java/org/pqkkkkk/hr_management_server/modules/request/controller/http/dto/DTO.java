@@ -285,4 +285,41 @@ public class DTO {
             );
         }
     }
+    
+    /**
+     * Response DTO for timesheet update request
+     */
+    public record TimesheetUpdateRequestDTO(
+            String requestId,
+            String employeeId,
+            String employeeFullName,
+            String employeeDepartmentId,
+            String employeeDepartmentName,
+            LocalDate workDate,
+            LocalDateTime requestedCheckIn,
+            LocalDateTime requestedCheckOut,
+            String reason,
+            String status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        public static TimesheetUpdateRequestDTO fromEntity(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request) {
+            if (request == null || request.getAdditionalTimesheetInfo() == null) return null;
+            var info = request.getAdditionalTimesheetInfo();
+            return new TimesheetUpdateRequestDTO(
+                request.getRequestId(),
+                request.getEmployee() != null ? request.getEmployee().getUserId() : null,
+                request.getEmployee() != null ? request.getEmployee().getFullName() : null,
+                request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentId() : null,
+                request.getEmployee() != null && request.getEmployee().getDepartment() != null ? request.getEmployee().getDepartment().getDepartmentName() : null,
+                info.getTargetDate(),
+                info.getDesiredCheckInTime(),
+                info.getDesiredCheckOutTime(),
+                request.getUserReason(),
+                request.getStatus() != null ? request.getStatus().name() : null,
+                request.getCreatedAt(),
+                request.getUpdatedAt()
+            );
+        }
+    }
 }

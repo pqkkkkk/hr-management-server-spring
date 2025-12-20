@@ -19,6 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request DTOs for Request module (Leave Requests).
@@ -173,6 +174,51 @@ public class Request {
                     .employee(User.builder().userId(employeeId).build())
                     .additionalCheckOutInfo(additionalCheckOutInfo)
                     .build();
+        }
+    }
+    
+    /**
+     * Request DTO for creating a timesheet update request
+     */
+    public record CreateTimesheetUpdateRequestRequest(
+            @NotNull(message = "Work date is required")
+            LocalDate workDate,
+
+            LocalDateTime requestedCheckIn,
+
+            LocalDateTime requestedCheckOut,
+
+            @NotBlank(message = "Reason is required")
+            @Size(min = 10, max = 500, message = "Reason must be 10-500 characters")
+            String reason,
+
+            @NotBlank(message = "Employee ID is required")
+            String employeeId
+    ) {
+        public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity() {
+            // Build AdditionalTimesheetInfo
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalTimesheetInfo additionalTimesheetInfo = org.pqkkkkk.hr_management_server.modules.request.domain.entity.AdditionalTimesheetInfo.builder()
+                .targetDate(workDate)
+                .desiredCheckInTime(requestedCheckIn)
+                .desiredCheckOutTime(requestedCheckOut)
+                .build();
+
+                // Build Employee entity
+            org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User employee = org.pqkkkkk.hr_management_server.modules.profile.domain.entity.User.builder()
+                .userId(employeeId)
+                .build();
+
+            // Build Request entity
+            org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request = org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                .requestType(org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType.TIMESHEET)
+                .userReason(reason)
+                .employee(employee)
+                .additionalTimesheetInfo(additionalTimesheetInfo)
+                .build();
+
+            // Set bidirectional relationship
+            additionalTimesheetInfo.setRequest(request);
+            return request;
         }
     }
 }
