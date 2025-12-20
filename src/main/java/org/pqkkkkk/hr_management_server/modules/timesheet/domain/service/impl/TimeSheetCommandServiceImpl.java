@@ -22,7 +22,8 @@ import java.util.List;
 
 /**
  * Implementation of TimeSheetCommandService.
- * Handles all timesheet creation and update operations when requests are approved.
+ * Handles all timesheet creation and update operations when requests are
+ * approved.
  */
 @Service
 @Transactional
@@ -44,28 +45,28 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (checkInTime == null) {
             throw new IllegalArgumentException(Constants.ERROR_NULL_TIME);
         }
-        
+
         // Validate employee exists
         validateAndGetEmployee(employeeId);
-        
+
         // Get check-in date
         LocalDate checkInDate = checkInTime.toLocalDate();
-        
+
         // Get or create timesheet for the date
         DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, checkInDate);
-        
+
         // Set check-in time
         timeSheet.setCheckInTime(checkInTime);
-        
+
         // Update morning status if check-in is in the morning
         if (isMorningTime(checkInTime)) {
             timeSheet.setMorningStatus(AttendanceStatus.PRESENT);
         }
-        
+
         // Calculate and set late minutes
         int lateMinutes = calculateLateMinutes(checkInTime);
         timeSheet.setLateMinutes(lateMinutes);
-        
+
         // Save and return
         return dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
     }
@@ -76,55 +77,53 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (checkOutTime == null) {
             throw new IllegalArgumentException(Constants.ERROR_NULL_TIME);
         }
-        
+
         // Validate employee exists
         validateAndGetEmployee(employeeId);
-        
+
         // Get check-out date
         LocalDate checkOutDate = checkOutTime.toLocalDate();
-        
+
         // Get existing timesheet (must exist with check-in)
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employeeId, 
-            checkOutDate
-        );
-        
+                employeeId,
+                checkOutDate);
+
         if (timeSheet == null) {
             throw new IllegalArgumentException(
-                String.format(Constants.ERROR_TIMESHEET_NOT_FOUND, employeeId, checkOutDate)
-            );
+                    String.format(Constants.ERROR_TIMESHEET_NOT_FOUND, employeeId, checkOutDate));
         }
-        
+
         // Validate check-in exists
         if (timeSheet.getCheckInTime() == null) {
             throw new IllegalArgumentException(Constants.ERROR_CHECKIN_REQUIRED);
         }
-        
+
         // Validate check-out is after check-in
         if (checkOutTime.isBefore(timeSheet.getCheckInTime())) {
             throw new IllegalArgumentException(Constants.ERROR_INVALID_TIME_RANGE);
         }
-        
+
         // Set check-out time
         timeSheet.setCheckOutTime(checkOutTime);
-        
+
         // Update afternoon status if check-out is in the afternoon
         if (isAfternoonTime(checkOutTime)) {
             timeSheet.setAfternoonStatus(AttendanceStatus.PRESENT);
         }
-        
+
         // Calculate and set early leave minutes
         int earlyLeaveMinutes = calculateEarlyLeaveMinutes(checkOutTime);
         timeSheet.setEarlyLeaveMinutes(earlyLeaveMinutes);
-        
+
         // Calculate and set overtime minutes
         int overtimeMinutes = calculateOvertimeMinutes(checkOutTime);
         timeSheet.setOvertimeMinutes(overtimeMinutes);
-        
+
         // Calculate and set total work credit based on actual working hours
         double workCredit = calculateWorkCredit(timeSheet.getCheckInTime(), checkOutTime);
         timeSheet.setTotalWorkCredit(workCredit);
-        
+
         // Save and return
         return dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
     }
@@ -135,21 +134,22 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (leaveDates == null || leaveDates.isEmpty()) {
             throw new IllegalArgumentException("Leave dates cannot be null or empty");
         }
-        
+
         // Validate employee exists (without loading the full entity)
         validateAndGetEmployee(employeeId);
-        
+
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
-        
+
         // Process each leave date
         for (LeaveDate leaveDate : leaveDates) {
             if (leaveDate.getDate() == null) {
                 throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
             }
-            
-            // Get or create timesheet for the date (pass userId only to avoid circular reference)
+
+            // Get or create timesheet for the date (pass userId only to avoid circular
+            // reference)
             DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, leaveDate.getDate());
-            
+
             // Set attendance status based on shift type
             ShiftType shift = leaveDate.getShift();
             if (shift == ShiftType.FULL_DAY) {
@@ -160,22 +160,22 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             } else if (shift == ShiftType.AFTERNOON) {
                 timeSheet.setAfternoonStatus(AttendanceStatus.LEAVE);
             }
-            
+
             // Leave days have zero work credit (unpaid leave)
             timeSheet.setTotalWorkCredit(Constants.ZERO_WORK_CREDIT);
-            
+
             // Clear check-in/out times as they're not applicable for leave
             timeSheet.setCheckInTime(null);
             timeSheet.setCheckOutTime(null);
             timeSheet.setLateMinutes(0);
             timeSheet.setEarlyLeaveMinutes(0);
             timeSheet.setOvertimeMinutes(0);
-            
+
             // Save timesheet
             DailyTimeSheet savedTimeSheet = dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
             timeSheets.add(savedTimeSheet);
         }
-        
+
         return timeSheets;
     }
 
@@ -185,21 +185,22 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (wfhDates == null || wfhDates.isEmpty()) {
             throw new IllegalArgumentException("WFH dates cannot be null or empty");
         }
-        
+
         // Validate employee exists
         validateAndGetEmployee(employeeId);
-        
+
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
-        
+
         // Process each WFH date
         for (WfhDate wfhDate : wfhDates) {
             if (wfhDate.getDate() == null) {
                 throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
             }
-            
-            // Get or create timesheet for the date (pass userId only to avoid circular reference)
+
+            // Get or create timesheet for the date (pass userId only to avoid circular
+            // reference)
             DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, wfhDate.getDate());
-            
+
             // Set WFH flags and attendance status based on shift type
             ShiftType shift = wfhDate.getShift();
             if (shift == ShiftType.FULL_DAY) {
@@ -217,10 +218,10 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
                 } else {
                     // Combine with afternoon (if already present or WFH)
                     timeSheet.setTotalWorkCredit(
-                        Constants.HALF_DAY_WORK_CREDIT + 
-                        (timeSheet.getAfternoonStatus() == AttendanceStatus.PRESENT ? 
-                            Constants.HALF_DAY_WORK_CREDIT : 0.0)
-                    );
+                            Constants.HALF_DAY_WORK_CREDIT +
+                                    (timeSheet.getAfternoonStatus() == AttendanceStatus.PRESENT
+                                            ? Constants.HALF_DAY_WORK_CREDIT
+                                            : 0.0));
                 }
             } else if (shift == ShiftType.AFTERNOON) {
                 timeSheet.setAfternoonWfh(true);
@@ -231,24 +232,23 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
                 } else {
                     // Combine with morning (if already present or WFH)
                     timeSheet.setTotalWorkCredit(
-                        (timeSheet.getMorningStatus() == AttendanceStatus.PRESENT ? 
-                            Constants.HALF_DAY_WORK_CREDIT : 0.0) +
-                        Constants.HALF_DAY_WORK_CREDIT
-                    );
+                            (timeSheet.getMorningStatus() == AttendanceStatus.PRESENT ? Constants.HALF_DAY_WORK_CREDIT
+                                    : 0.0) +
+                                    Constants.HALF_DAY_WORK_CREDIT);
                 }
             }
-            
+
             // WFH doesn't require check-in/out times, but keep if already exists
             // Reset time-based metrics for WFH days
             timeSheet.setLateMinutes(0);
             timeSheet.setEarlyLeaveMinutes(0);
             timeSheet.setOvertimeMinutes(0);
-            
+
             // Save timesheet
             DailyTimeSheet savedTimeSheet = dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
             timeSheets.add(savedTimeSheet);
         }
-        
+
         return timeSheets;
     }
 
@@ -262,69 +262,81 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (targetDate == null) {
             throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
         }
-        if (newCheckInTime == null || newCheckOutTime == null) {
-            throw new IllegalArgumentException(Constants.ERROR_NULL_TIME);
+
+        // At least one time must be provided
+        if (newCheckInTime == null && newCheckOutTime == null) {
+            throw new IllegalArgumentException("At least one of check-in or check-out time must be provided");
         }
-        
-        // Validate check-out is after check-in
-        if (newCheckOutTime.isBefore(newCheckInTime)) {
-            throw new IllegalArgumentException(Constants.ERROR_INVALID_TIME_RANGE);
-        }
-        
+
         // Validate employee exists
         validateAndGetEmployee(employeeId);
-        
+
         // Get existing timesheet (must exist)
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employeeId, 
-            targetDate
-        );
-        
+                employeeId,
+                targetDate);
+
         if (timeSheet == null) {
             throw new IllegalArgumentException(
-                String.format(Constants.ERROR_TIMESHEET_NOT_FOUND, employeeId, targetDate)
-            );
+                    String.format(Constants.ERROR_TIMESHEET_NOT_FOUND, employeeId, targetDate));
         }
-        
+
         // Validate timesheet is not finalized
         if (Boolean.TRUE.equals(timeSheet.getIsFinalized())) {
             throw new IllegalArgumentException(
-                String.format(Constants.ERROR_TIMESHEET_FINALIZED, targetDate)
-            );
+                    String.format(Constants.ERROR_TIMESHEET_FINALIZED, targetDate));
         }
-        
-        // Update check-in and check-out times
-        timeSheet.setCheckInTime(newCheckInTime);
-        timeSheet.setCheckOutTime(newCheckOutTime);
-        
-        // Update morning status if check-in is in the morning
-        if (isMorningTime(newCheckInTime)) {
-            timeSheet.setMorningStatus(AttendanceStatus.PRESENT);
+
+        // Update check-in time if provided
+        if (newCheckInTime != null) {
+            timeSheet.setCheckInTime(newCheckInTime);
+
+            // Update morning status if check-in is in the morning
+            if (isMorningTime(newCheckInTime)) {
+                timeSheet.setMorningStatus(AttendanceStatus.PRESENT);
+            }
+
+            // Calculate and set late minutes
+            int lateMinutes = calculateLateMinutes(newCheckInTime);
+            timeSheet.setLateMinutes(lateMinutes);
         }
-        
-        // Update afternoon status if check-out is in the afternoon
-        if (isAfternoonTime(newCheckOutTime)) {
-            timeSheet.setAfternoonStatus(AttendanceStatus.PRESENT);
+
+        // Update check-out time if provided
+        if (newCheckOutTime != null) {
+            // Validate check-out is after check-in (if both exist)
+            LocalDateTime effectiveCheckIn = newCheckInTime != null ? newCheckInTime : timeSheet.getCheckInTime();
+            if (effectiveCheckIn != null && newCheckOutTime.isBefore(effectiveCheckIn)) {
+                throw new IllegalArgumentException(Constants.ERROR_INVALID_TIME_RANGE);
+            }
+
+            timeSheet.setCheckOutTime(newCheckOutTime);
+
+            // Update afternoon status if check-out is in the afternoon
+            if (isAfternoonTime(newCheckOutTime)) {
+                timeSheet.setAfternoonStatus(AttendanceStatus.PRESENT);
+            }
+
+            // Calculate and set early leave minutes
+            int earlyLeaveMinutes = calculateEarlyLeaveMinutes(newCheckOutTime);
+            timeSheet.setEarlyLeaveMinutes(earlyLeaveMinutes);
+
+            // Calculate and set overtime minutes
+            int overtimeMinutes = calculateOvertimeMinutes(newCheckOutTime);
+            timeSheet.setOvertimeMinutes(overtimeMinutes);
         }
-        
-        // Recalculate all time-based metrics
-        int lateMinutes = calculateLateMinutes(newCheckInTime);
-        timeSheet.setLateMinutes(lateMinutes);
-        
-        int earlyLeaveMinutes = calculateEarlyLeaveMinutes(newCheckOutTime);
-        timeSheet.setEarlyLeaveMinutes(earlyLeaveMinutes);
-        
-        int overtimeMinutes = calculateOvertimeMinutes(newCheckOutTime);
-        timeSheet.setOvertimeMinutes(overtimeMinutes);
-        
-        // Recalculate total work credit based on new working hours
-        double workCredit = calculateWorkCredit(newCheckInTime, newCheckOutTime);
-        timeSheet.setTotalWorkCredit(workCredit);
-        
+
+        // Recalculate total work credit if both check-in and check-out exist
+        LocalDateTime effectiveCheckIn = timeSheet.getCheckInTime();
+        LocalDateTime effectiveCheckOut = timeSheet.getCheckOutTime();
+        if (effectiveCheckIn != null && effectiveCheckOut != null) {
+            double workCredit = calculateWorkCredit(effectiveCheckIn, effectiveCheckOut);
+            timeSheet.setTotalWorkCredit(workCredit);
+        }
+
         // Reset WFH flags as this is a timesheet update (not WFH)
         timeSheet.setMorningWfh(false);
         timeSheet.setAfternoonWfh(false);
-        
+
         // Save and return
         return dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
     }
@@ -342,46 +354,46 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (employeeId == null) {
             throw new IllegalArgumentException(Constants.ERROR_NULL_EMPLOYEE_ID);
         }
-        
+
         User employee = profileQueryService.getProfileById(employeeId);
         if (employee == null) {
             throw new IllegalArgumentException(
-                String.format(Constants.ERROR_EMPLOYEE_NOT_FOUND, employeeId)
-            );
+                    String.format(Constants.ERROR_EMPLOYEE_NOT_FOUND, employeeId));
         }
-        
+
         return employee;
     }
 
     /**
-     * Gets existing timesheet or creates a new one for the specified employee and date.
+     * Gets existing timesheet or creates a new one for the specified employee and
+     * date.
      * 
      * @param employeeId Employee user ID
-     * @param date Date for the timesheet
+     * @param date       Date for the timesheet
      * @return Existing or newly created DailyTimeSheet
      */
     private DailyTimeSheet getOrCreateTimeSheet(String employeeId, LocalDate date) {
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
-            employeeId, 
-            date
-        );
-        
+                employeeId,
+                date);
+
         if (timeSheet == null) {
-            // Create a new timesheet with employee reference (let JPA manage the relationship)
+            // Create a new timesheet with employee reference (let JPA manage the
+            // relationship)
             User employeeRef = User.builder().userId(employeeId).build();
             timeSheet = DailyTimeSheet.builder()
-                .employee(employeeRef)
-                .date(date)
-                .isFinalized(false)
-                .totalWorkCredit(Constants.ZERO_WORK_CREDIT)
-                .lateMinutes(0)
-                .earlyLeaveMinutes(0)
-                .overtimeMinutes(0)
-                .morningWfh(false)
-                .afternoonWfh(false)
-                .build();
+                    .employee(employeeRef)
+                    .date(date)
+                    .isFinalized(false)
+                    .totalWorkCredit(Constants.ZERO_WORK_CREDIT)
+                    .lateMinutes(0)
+                    .earlyLeaveMinutes(0)
+                    .overtimeMinutes(0)
+                    .morningWfh(false)
+                    .afternoonWfh(false)
+                    .build();
         }
-        
+
         return timeSheet;
     }
 
@@ -393,35 +405,34 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
      */
     private int calculateLateMinutes(LocalDateTime checkInTime) {
         LocalTime checkInLocalTime = checkInTime.toLocalTime();
-        
+
         if (checkInLocalTime.isAfter(Constants.STANDARD_CHECK_IN_TIME)) {
             long minutesLate = Duration.between(
-                Constants.STANDARD_CHECK_IN_TIME, 
-                checkInLocalTime
-            ).toMinutes();
+                    Constants.STANDARD_CHECK_IN_TIME,
+                    checkInLocalTime).toMinutes();
             return (int) minutesLate;
         }
-        
+
         return 0;
     }
 
     /**
-     * Calculates early leave minutes if check-out is before standard time (5:00 PM).
+     * Calculates early leave minutes if check-out is before standard time (5:00
+     * PM).
      * 
      * @param checkOutTime The check-out time
      * @return Early leave minutes (0 if on time or late)
      */
     private int calculateEarlyLeaveMinutes(LocalDateTime checkOutTime) {
         LocalTime checkOutLocalTime = checkOutTime.toLocalTime();
-        
+
         if (checkOutLocalTime.isBefore(Constants.STANDARD_CHECK_OUT_TIME)) {
             long minutesEarly = Duration.between(
-                checkOutLocalTime,
-                Constants.STANDARD_CHECK_OUT_TIME
-            ).toMinutes();
+                    checkOutLocalTime,
+                    Constants.STANDARD_CHECK_OUT_TIME).toMinutes();
             return (int) minutesEarly;
         }
-        
+
         return 0;
     }
 
@@ -433,21 +444,21 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
      */
     private int calculateOvertimeMinutes(LocalDateTime checkOutTime) {
         LocalTime checkOutLocalTime = checkOutTime.toLocalTime();
-        
+
         if (checkOutLocalTime.isAfter(Constants.STANDARD_CHECK_OUT_TIME)) {
             long minutesOvertime = Duration.between(
-                Constants.STANDARD_CHECK_OUT_TIME,
-                checkOutLocalTime
-            ).toMinutes();
+                    Constants.STANDARD_CHECK_OUT_TIME,
+                    checkOutLocalTime).toMinutes();
             return (int) minutesOvertime;
         }
-        
+
         return 0;
     }
 
     /**
      * Calculates work credit based on actual working hours.
-     * Work credit is proportional to standard 9-hour working day (8:00 AM - 5:00 PM).
+     * Work credit is proportional to standard 9-hour working day (8:00 AM - 5:00
+     * PM).
      * Formula: (actual working minutes) / (standard working minutes = 540)
      * 
      * Examples:
@@ -455,7 +466,7 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
      * - 8 hours (480 min) = 0.889 credit ≈ 0.89
      * - 4.5 hours (270 min) = 0.5 credit
      * 
-     * @param checkInTime Check-in time
+     * @param checkInTime  Check-in time
      * @param checkOutTime Check-out time
      * @return Work credit (0.0 to 1.0+)
      */
@@ -463,16 +474,16 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         if (checkInTime == null || checkOutTime == null) {
             return Constants.ZERO_WORK_CREDIT;
         }
-        
+
         long actualWorkingMinutes = Duration.between(checkInTime, checkOutTime).toMinutes();
-        
+
         if (actualWorkingMinutes <= 0) {
             return Constants.ZERO_WORK_CREDIT;
         }
-        
+
         // Calculate proportional work credit
         double workCredit = (double) actualWorkingMinutes / Constants.STANDARD_WORKING_MINUTES;
-        
+
         // Round to 3 decimal places for precision
         return Math.round(workCredit * 1000.0) / 1000.0;
     }

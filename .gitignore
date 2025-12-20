@@ -1,5 +1,5 @@
 .github/instructions/
-
+.agent
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
