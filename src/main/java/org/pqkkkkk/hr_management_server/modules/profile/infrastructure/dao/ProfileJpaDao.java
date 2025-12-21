@@ -59,4 +59,9 @@ public class ProfileJpaDao implements ProfileDao {
         return profileRepository.getAllUsers(filter);
     }
 
+    @Override
+    public User getProfileByEmail(String email) {
+        return profileRepository.findByEmailIgnoreCase(email).orElse(null);
+    }
+
 }
