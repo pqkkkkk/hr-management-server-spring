@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-@Service
+@Service("timesheetUpdateRequestCommandService")
 public class TimesheetRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
