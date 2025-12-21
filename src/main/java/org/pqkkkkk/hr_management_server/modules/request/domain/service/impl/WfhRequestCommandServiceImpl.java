@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Service
+@Service("remoteWorkRequestCommandService")
 public class WfhRequestCommandServiceImpl implements RequestCommandService {
     private final RequestDao requestDao;
     private final ProfileQueryService profileQueryService;
