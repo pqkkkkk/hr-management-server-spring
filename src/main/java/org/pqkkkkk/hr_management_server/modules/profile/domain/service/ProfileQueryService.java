@@ -7,6 +7,10 @@ import org.springframework.data.domain.Page;
 
 public interface ProfileQueryService {
     Page<User> getProfiles(ProfileFilter filter);
+
     User getProfileById(String userId);
+
+    User getProfileByEmail(String email);
+
     String exportProfiles(ProfileFilter filter, SupportedFileFormat fileFormat);
 }

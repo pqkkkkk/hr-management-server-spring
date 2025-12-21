@@ -81,4 +81,12 @@ public class ProfileQueryServiceImpl implements ProfileQueryService {
         return String.format("%s_%s%s", prefix, timestamp, format.getFileExtension());
     }
 
+    @Override
+    public User getProfileByEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return profileDao.getProfileByEmail(email);
+    }
+
 }
