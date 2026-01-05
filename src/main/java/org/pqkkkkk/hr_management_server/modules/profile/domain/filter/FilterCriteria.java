@@ -19,7 +19,8 @@ public class FilterCriteria {
         UserGender gender,
         UserStatus status,
         UserPosition position,
-        String departmentId
+        String departmentId,
+        String departmentName
     ) {
 
     }

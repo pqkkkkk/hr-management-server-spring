@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 /**
- * Implementation of RequestActionService that provides unified approve and reject
+ * Implementation of RequestActionService that provides unified approve and
+ * reject
  * functionality for all request types.
  * <p>
  * This service determines the request type and delegates the action to the
@@ -20,18 +21,17 @@ import jakarta.transaction.Transactional;
  */
 @Service
 public class RequestActionServiceImpl implements RequestActionService {
-    
+
     private final List<RequestCommandService> commandServices;
     private final RequestQueryService queryService;
-    
+
     public RequestActionServiceImpl(
             List<RequestCommandService> commandServices,
-            RequestQueryService queryService
-    ) {
+            RequestQueryService queryService) {
         this.commandServices = commandServices;
         this.queryService = queryService;
     }
-    
+
     @Override
     @Transactional
     public Request approve(String requestId, String approverId) {
@@ -40,14 +40,14 @@ public class RequestActionServiceImpl implements RequestActionService {
         if (request == null) {
             throw new IllegalArgumentException("Request not found with ID: " + requestId);
         }
-        
+
         // Find appropriate service for this request type
         RequestCommandService service = findServiceForType(request.getRequestType());
-        
+
         // Delegate to the appropriate service
         return service.approveRequest(requestId, approverId);
     }
-    
+
     @Override
     @Transactional
     public Request reject(String requestId, String rejecterId, String rejectionReason) {
@@ -56,32 +56,33 @@ public class RequestActionServiceImpl implements RequestActionService {
         if (request == null) {
             throw new IllegalArgumentException("Request not found with ID: " + requestId);
         }
-        
+
         // Find appropriate service for this request type
         RequestCommandService service = findServiceForType(request.getRequestType());
-        
+
         // Delegate to the appropriate service
         return service.rejectRequest(requestId, rejecterId, rejectionReason);
     }
-    
+
     /**
-     * Finds the appropriate RequestCommandService implementation for the given request type.
+     * Finds the appropriate RequestCommandService implementation for the given
+     * request type.
      * 
      * @param requestType The type of request (CHECK_IN, CHECK_OUT, LEAVE, etc.)
      * @return The matching RequestCommandService implementation
-     * @throws IllegalArgumentException if no service supports the given request type
+     * @throws IllegalArgumentException if no service supports the given request
+     *                                  type
      */
-    private RequestCommandService findServiceForType(RequestType requestType) {        
+    private RequestCommandService findServiceForType(RequestType requestType) {
         String expectedServiceName = getServiceNameForType(requestType);
-        
+
         return commandServices.stream()
                 .filter(service -> service.getClass().getSimpleName().startsWith(expectedServiceName))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
-                    "No service found for request type: " + requestType
-                ));
+                        "No service found for request type: " + requestType));
     }
-    
+
     /**
      * Gets the expected service class name prefix for a given request type.
      * 
@@ -96,11 +97,15 @@ public class RequestActionServiceImpl implements RequestActionService {
                 return "CheckIn";
             case CHECK_OUT:
                 return "CheckOut";
+            case WFH:
+                return "Wfh";
+            case TIMESHEET:
+                return "Timesheet";
             default:
                 throw new IllegalArgumentException("Unsupported request type: " + requestType);
         }
     }
-    
+
     @Override
     @Transactional
     public Request delegate(String requestId, String newProcessorId) {
@@ -109,10 +114,10 @@ public class RequestActionServiceImpl implements RequestActionService {
         if (request == null) {
             throw new IllegalArgumentException("Request not found with ID: " + requestId);
         }
-        
+
         // Find appropriate service for this request type
         RequestCommandService service = findServiceForType(request.getRequestType());
-        
+
         // Delegate to the appropriate service
         return service.delegateRequest(requestId, newProcessorId);
     }

@@ -37,7 +37,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId,
+                null // departmentName
         );
 
         // Act
@@ -64,7 +65,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -90,7 +92,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -117,7 +120,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -144,7 +148,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -171,7 +176,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 UserGender.MALE, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -198,7 +204,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 UserGender.FEMALE, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -225,7 +232,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 UserStatus.ACTIVE, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -252,7 +260,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 UserStatus.INACTIVE, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -279,7 +288,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 UserPosition.JUNIOR_DEVELOPER, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -308,7 +318,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                engineeringDeptId // departmentId
+                engineeringDeptId, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -338,7 +349,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 UserGender.MALE, // gender
                 UserStatus.ACTIVE, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -363,6 +375,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 10,
                 UserSortingField.NAME,
                 SortDirection.ASC,
+                null,
                 null,
                 null,
                 null,
@@ -402,6 +415,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 null,
                 null,
                 null,
+                null,
                 null);
 
         // Act
@@ -436,7 +450,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -471,7 +486,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -497,7 +513,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 null, // status
                 null, // position
-                null // departmentId
+                null, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -526,7 +543,8 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // gender
                 UserStatus.ACTIVE, // status
                 null, // position
-                engineeringDeptId // departmentId
+                engineeringDeptId, // departmentId
+                null // departmentName
         );
 
         // Act
@@ -547,7 +565,7 @@ class ProfileQueryServiceImplIntegrationTest {
     void testGetProfiles_VerifyUserEntityCompleteness_Success() {
         // Arrange
         ProfileFilter filter = new ProfileFilter(
-                1, 1, null, null, null, null, null, null, null, null);
+                1, 1, null, null, null, null, null, null, null, null, null);
 
         // Act
         Page<User> result = profileQueryService.getProfiles(filter);

@@ -21,6 +21,7 @@ public interface ProfileRepository extends JpaRepository<User, String> {
             AND (:#{#filter.departmentId} IS NULL OR u.department.departmentId = :#{#filter.departmentId})
             AND (:#{#filter.position} IS NULL OR u.position = :#{#filter.position})
             AND (:#{#filter.gender} IS NULL OR u.gender = :#{#filter.gender})
+            AND (:#{#filter.departmentName} IS NULL OR u.department.departmentName = :#{#filter.departmentName})
             """)
     public Page<User> getUsers(Pageable pageable, ProfileFilter filter);
 
