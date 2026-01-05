@@ -6,6 +6,7 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.User
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -32,7 +33,11 @@ public class DTO {
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             String departmentId,
-            String departmentName
+            String departmentName,
+            Integer maxAnnualLeaveDays,
+            BigDecimal remainingAnnualLeaveDays,
+            BigDecimal maxWfhDays,
+            BigDecimal remainingWfhDays
     ){
         public User toEntity(){
             return User.builder()
@@ -73,7 +78,11 @@ public class DTO {
                     user.getCreatedAt(),
                     user.getUpdatedAt(),
                     user.getDepartment() != null ? user.getDepartment().getDepartmentId() : null,
-                    user.getDepartment() != null ? user.getDepartment().getDepartmentName() : null
+                    user.getDepartment() != null ? user.getDepartment().getDepartmentName() : null,
+                    user.getMaxAnnualLeave(),
+                    user.getRemainingAnnualLeave(),
+                    user.getMaxWfhDays(),
+                    user.getRemainingWfhDays()
             );
         }
     }

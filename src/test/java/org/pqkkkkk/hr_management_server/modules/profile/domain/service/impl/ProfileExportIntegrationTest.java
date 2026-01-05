@@ -53,7 +53,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -84,7 +84,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.PDF);
@@ -119,7 +119,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, UserRole.ADMIN, null, null, null, null);
+                null, UserRole.ADMIN, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -142,7 +142,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.DESC,
-                null, null, null, UserStatus.ACTIVE, null, null);
+                null, null, null, UserStatus.ACTIVE, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.PDF);
@@ -162,7 +162,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 50,
                 UserSortingField.NAME, SortDirection.DESC,
-                null, null, UserGender.MALE, null, null, null);
+                null, null, UserGender.MALE, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -182,7 +182,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, UserPosition.SENIOR_DEVELOPER, null);
+                null, null, null, null, UserPosition.SENIOR_DEVELOPER, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.PDF);
@@ -202,7 +202,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, UserRole.EMPLOYEE, UserGender.FEMALE, UserStatus.ACTIVE, null, null);
+                null, UserRole.EMPLOYEE, UserGender.FEMALE, UserStatus.ACTIVE, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -226,7 +226,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                "NonExistentUserName12345", null, null, null, null, null);
+                "NonExistentUserName12345", null, null, null, null, null, null);
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
@@ -247,7 +247,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act - Export twice with slight delay to ensure different timestamps
         String fileUrl1 = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -277,7 +277,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act - Export to both Excel and PDF
         String excelUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -308,7 +308,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -330,7 +330,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.PDF);
@@ -356,7 +356,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 1000, // Large page size
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -384,7 +384,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -410,7 +410,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.PDF);
