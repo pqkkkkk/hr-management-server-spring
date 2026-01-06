@@ -16,8 +16,10 @@ import java.time.LocalDate;
 
 /**
  * Request DTOs for Profile module.
- * <p> They are used to encapsulate data sent by clients in HTTP requests.
- * <p> Each request DTO includes methods to convert to entity objects.
+ * <p>
+ * They are used to encapsulate data sent by clients in HTTP requests.
+ * <p>
+ * Each request DTO includes methods to convert to entity objects.
  */
 public class Request {
     public record UpdateUserForHRRequest(
@@ -34,9 +36,9 @@ public class Request {
             String address,
             String bankAccountNumber,
             String bankName,
-            String departmentId
-    ){
-        public User toEntity(){
+            String departmentId,
+            String departmentName) {
+        public User toEntity() {
             return User.builder()
                     .fullName(fullName)
                     .email(email)
@@ -51,32 +53,33 @@ public class Request {
                     .address(address)
                     .bankAccountNumber(bankAccountNumber)
                     .bankName(bankName)
-                    .department(Department.builder().departmentId(departmentId).build())
+                    .department(Department.builder()
+                            .departmentId(departmentId)
+                            .departmentName(departmentName)
+                            .build())
                     .build();
         }
     }
 
     public record ExportProfilesRequest(
-            @NotNull(message = "File format is required")
-            SupportedFileFormat fileFormat,
-            ProfileFilter filter
-    ){}
+            @NotNull(message = "File format is required") SupportedFileFormat fileFormat,
+            ProfileFilter filter) {
+    }
+
     public record UpdateUserForEmployeeRequest(
 
             String fullName,
 
-            @Email(message = "Invalid email format")
-            String email,
+            @Email(message = "Invalid email format") String email,
 
-            @Pattern(regexp = "^0\\d{9}$", message = "Phone number must be 10 digits starting with 0")
-            String phoneNumber,
+            @Pattern(regexp = "^0\\d{9}$", message = "Phone number must be 10 digits starting with 0") String phoneNumber,
 
             String address
 
     ) {
         public User toEntity() {
             User.UserBuilder builder = User.builder();
-            
+
             if (fullName != null && !fullName.isBlank()) {
                 builder.fullName(fullName);
             }
@@ -89,7 +92,7 @@ public class Request {
             if (address != null && !address.isBlank()) {
                 builder.address(address);
             }
-            
+
             return builder.build();
         }
     }
