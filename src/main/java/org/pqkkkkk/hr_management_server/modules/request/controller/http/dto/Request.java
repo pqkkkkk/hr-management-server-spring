@@ -120,6 +120,8 @@ public class Request {
 
                         String userReason,
 
+                        String attachmentUrl,
+
                         @NotBlank(message = "Employee ID is required") String employeeId,
 
                         @NotNull(message = "Desired check-in time is required") LocalDateTime desiredCheckInTime) {
@@ -134,6 +136,7 @@ public class Request {
                                         .requestType(RequestType.CHECK_IN)
                                         .title(title)
                                         .userReason(userReason)
+                                        .attachmentUrl(attachmentUrl)
                                         .employee(User.builder().userId(employeeId).build())
                                         .additionalCheckInInfo(additionalCheckInInfo)
                                         .build();
@@ -147,6 +150,8 @@ public class Request {
                         String title,
 
                         String userReason,
+
+                        String attachmentUrl,
 
                         @NotBlank(message = "Employee ID is required") String employeeId,
 
@@ -162,6 +167,7 @@ public class Request {
                                         .requestType(RequestType.CHECK_OUT)
                                         .title(title)
                                         .userReason(userReason)
+                                        .attachmentUrl(attachmentUrl)
                                         .employee(User.builder().userId(employeeId).build())
                                         .additionalCheckOutInfo(additionalCheckOutInfo)
                                         .build();
@@ -175,6 +181,8 @@ public class Request {
                         String title,
 
                         String userReason,
+
+                        String attachmentUrl,
 
                         @NotBlank(message = "Employee ID is required") String employeeId,
 
@@ -202,6 +210,7 @@ public class Request {
                                         .requestType(RequestType.TIMESHEET)
                                         .title(title)
                                         .userReason(userReason)
+                                        .attachmentUrl(attachmentUrl)
                                         .employee(User.builder().userId(employeeId).build())
                                         .additionalTimesheetInfo(additionalTimesheetInfo)
                                         .build();
