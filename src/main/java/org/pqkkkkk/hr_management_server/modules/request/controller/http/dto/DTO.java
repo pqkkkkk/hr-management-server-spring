@@ -175,6 +175,7 @@ public class DTO {
      */
     public record CheckInRequestDTO(
             String requestId,
+            String attachmentUrl,
             RequestType requestType,
             RequestStatus status,
             String title,
@@ -206,6 +207,7 @@ public class DTO {
 
             return new CheckInRequestDTO(
                     request.getRequestId(),
+                    request.getAttachmentUrl(),
                     request.getRequestType(),
                     request.getStatus(),
                     request.getTitle(),
@@ -235,6 +237,7 @@ public class DTO {
      */
     public record CheckOutRequestDTO(
             String requestId,
+            String attachmentUrl,
             RequestType requestType,
             RequestStatus status,
             String title,
@@ -266,6 +269,7 @@ public class DTO {
 
             return new CheckOutRequestDTO(
                     request.getRequestId(),
+                    request.getAttachmentUrl(),
                     request.getRequestType(),
                     request.getStatus(),
                     request.getTitle(),
@@ -295,6 +299,7 @@ public class DTO {
      */
     public record TimeSheetRequestDTO(
             String requestId,
+            String attachmentUrl,
             RequestType requestType,
             RequestStatus status,
             String title,
@@ -338,6 +343,7 @@ public class DTO {
 
             return new TimeSheetRequestDTO(
                     request.getRequestId(),
+                    request.getAttachmentUrl(),
                     request.getRequestType(),
                     request.getStatus(),
                     request.getTitle(),
