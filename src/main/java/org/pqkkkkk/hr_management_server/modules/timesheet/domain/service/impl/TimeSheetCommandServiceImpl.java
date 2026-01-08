@@ -10,6 +10,7 @@ import org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity.Constant
 import org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity.DailyTimeSheet;
 import org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity.Enums.AttendanceStatus;
 import org.pqkkkkk.hr_management_server.modules.timesheet.domain.service.TimeSheetCommandService;
+import org.pqkkkkk.hr_management_server.modules.timesheet.domain.service.TimeSheetValidationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +32,15 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
 
     private final DailyTimeSheetDao dailyTimeSheetDao;
     private final ProfileQueryService profileQueryService;
+    private final TimeSheetValidationService validationService;
 
     public TimeSheetCommandServiceImpl(
             DailyTimeSheetDao dailyTimeSheetDao,
-            ProfileQueryService profileQueryService) {
+            ProfileQueryService profileQueryService,
+            TimeSheetValidationService validationService) {
         this.dailyTimeSheetDao = dailyTimeSheetDao;
         this.profileQueryService = profileQueryService;
+        this.validationService = validationService;
     }
 
     @Override
@@ -48,6 +52,9 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
 
         // Validate employee exists
         validateAndGetEmployee(employeeId);
+
+        // Validate check-in approval (duplicate, conflict checks)
+        validationService.validateCheckInApproval(employeeId, checkInTime);
 
         // Get check-in date
         LocalDate checkInDate = checkInTime.toLocalDate();
@@ -81,28 +88,16 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
         // Validate employee exists
         validateAndGetEmployee(employeeId);
 
+        // Validate check-out approval (duplicate, conflict, time order checks)
+        validationService.validateCheckOutApproval(employeeId, checkOutTime);
+
         // Get check-out date
         LocalDate checkOutDate = checkOutTime.toLocalDate();
 
-        // Get existing timesheet (must exist with check-in)
+        // Get existing timesheet
         DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
                 employeeId,
                 checkOutDate);
-
-        if (timeSheet == null) {
-            throw new IllegalArgumentException(
-                    String.format(Constants.ERROR_TIMESHEET_NOT_FOUND, employeeId, checkOutDate));
-        }
-
-        // Validate check-in exists
-        if (timeSheet.getCheckInTime() == null) {
-            throw new IllegalArgumentException(Constants.ERROR_CHECKIN_REQUIRED);
-        }
-
-        // Validate check-out is after check-in
-        if (checkOutTime.isBefore(timeSheet.getCheckInTime())) {
-            throw new IllegalArgumentException(Constants.ERROR_INVALID_TIME_RANGE);
-        }
 
         // Set check-out time
         timeSheet.setCheckOutTime(checkOutTime);
@@ -135,8 +130,11 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
             throw new IllegalArgumentException("Leave dates cannot be null or empty");
         }
 
-        // Validate employee exists (without loading the full entity)
+        // Validate employee exists
         validateAndGetEmployee(employeeId);
+
+        // Validate leave approval (conflict checks)
+        validationService.validateLeaveApproval(employeeId, leaveDates);
 
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
 
@@ -146,32 +144,48 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
                 throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
             }
 
-            // Get or create timesheet for the date (pass userId only to avoid circular
-            // reference)
             DailyTimeSheet timeSheet = getOrCreateTimeSheet(employeeId, leaveDate.getDate());
-
-            // Set attendance status based on shift type
             ShiftType shift = leaveDate.getShift();
+
             if (shift == ShiftType.FULL_DAY) {
+                // Full day leave - clear everything
                 timeSheet.setMorningStatus(AttendanceStatus.LEAVE);
                 timeSheet.setAfternoonStatus(AttendanceStatus.LEAVE);
+                timeSheet.setTotalWorkCredit(Constants.ZERO_WORK_CREDIT);
+                timeSheet.setCheckInTime(null);
+                timeSheet.setCheckOutTime(null);
+                timeSheet.setLateMinutes(0);
+                timeSheet.setEarlyLeaveMinutes(0);
+                timeSheet.setOvertimeMinutes(0);
             } else if (shift == ShiftType.MORNING) {
+                // Morning leave - preserve afternoon data
                 timeSheet.setMorningStatus(AttendanceStatus.LEAVE);
+                // Clear morning check-in only if no afternoon work
+                if (timeSheet.getAfternoonStatus() != AttendanceStatus.PRESENT) {
+                    timeSheet.setCheckInTime(null);
+                }
+                // Recalculate work credit based on afternoon status
+                if (timeSheet.getAfternoonStatus() == AttendanceStatus.PRESENT) {
+                    timeSheet.setTotalWorkCredit(Constants.HALF_DAY_WORK_CREDIT);
+                } else {
+                    timeSheet.setTotalWorkCredit(Constants.ZERO_WORK_CREDIT);
+                }
+                timeSheet.setLateMinutes(0); // No late for morning leave
             } else if (shift == ShiftType.AFTERNOON) {
+                // Afternoon leave - preserve morning data
                 timeSheet.setAfternoonStatus(AttendanceStatus.LEAVE);
+                // Clear checkout only, preserve check-in
+                timeSheet.setCheckOutTime(null);
+                // Recalculate work credit based on morning status
+                if (timeSheet.getMorningStatus() == AttendanceStatus.PRESENT) {
+                    timeSheet.setTotalWorkCredit(Constants.HALF_DAY_WORK_CREDIT);
+                } else {
+                    timeSheet.setTotalWorkCredit(Constants.ZERO_WORK_CREDIT);
+                }
+                timeSheet.setEarlyLeaveMinutes(0); // No early leave tracking
+                timeSheet.setOvertimeMinutes(0);
             }
 
-            // Leave days have zero work credit (unpaid leave)
-            timeSheet.setTotalWorkCredit(Constants.ZERO_WORK_CREDIT);
-
-            // Clear check-in/out times as they're not applicable for leave
-            timeSheet.setCheckInTime(null);
-            timeSheet.setCheckOutTime(null);
-            timeSheet.setLateMinutes(0);
-            timeSheet.setEarlyLeaveMinutes(0);
-            timeSheet.setOvertimeMinutes(0);
-
-            // Save timesheet
             DailyTimeSheet savedTimeSheet = dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
             timeSheets.add(savedTimeSheet);
         }
@@ -188,6 +202,9 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
 
         // Validate employee exists
         validateAndGetEmployee(employeeId);
+
+        // Validate WFH approval (conflict checks)
+        validationService.validateWfhApproval(employeeId, wfhDates);
 
         List<DailyTimeSheet> timeSheets = new ArrayList<>();
 
@@ -339,6 +356,106 @@ public class TimeSheetCommandServiceImpl implements TimeSheetCommandService {
 
         // Save and return
         return dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
+    }
+
+    @Override
+    public DailyTimeSheet handleTimesheetUpdateApproval(
+            String employeeId,
+            LocalDate targetDate,
+            LocalDateTime newCheckInTime,
+            LocalDateTime newCheckOutTime,
+            AttendanceStatus newMorningStatus,
+            AttendanceStatus newAfternoonStatus,
+            Boolean newMorningWfh,
+            Boolean newAfternoonWfh) {
+
+        // Validate inputs
+        if (targetDate == null) {
+            throw new IllegalArgumentException(Constants.ERROR_NULL_DATE);
+        }
+
+        // Validate employee exists
+        validateAndGetEmployee(employeeId);
+
+        // Validate using validation service
+        validationService.validateTimesheetUpdateApproval(
+                employeeId, targetDate, newCheckInTime, newCheckOutTime,
+                newMorningStatus, newAfternoonStatus, newMorningWfh, newAfternoonWfh);
+
+        // Get existing timesheet
+        DailyTimeSheet timeSheet = dailyTimeSheetDao.getTimesheetByEmployeeAndDate(
+                employeeId, targetDate);
+
+        // Update morning status if provided
+        if (newMorningStatus != null) {
+            timeSheet.setMorningStatus(newMorningStatus);
+        }
+
+        // Update afternoon status if provided
+        if (newAfternoonStatus != null) {
+            timeSheet.setAfternoonStatus(newAfternoonStatus);
+        }
+
+        // Update WFH flags if provided
+        if (newMorningWfh != null) {
+            timeSheet.setMorningWfh(newMorningWfh);
+        }
+        if (newAfternoonWfh != null) {
+            timeSheet.setAfternoonWfh(newAfternoonWfh);
+        }
+
+        // Update check-in time if provided
+        if (newCheckInTime != null) {
+            timeSheet.setCheckInTime(newCheckInTime);
+            int lateMinutes = calculateLateMinutes(newCheckInTime);
+            timeSheet.setLateMinutes(lateMinutes);
+        }
+
+        // Update check-out time if provided
+        if (newCheckOutTime != null) {
+            timeSheet.setCheckOutTime(newCheckOutTime);
+            int earlyLeaveMinutes = calculateEarlyLeaveMinutes(newCheckOutTime);
+            timeSheet.setEarlyLeaveMinutes(earlyLeaveMinutes);
+            int overtimeMinutes = calculateOvertimeMinutes(newCheckOutTime);
+            timeSheet.setOvertimeMinutes(overtimeMinutes);
+        }
+
+        // Recalculate total work credit based on final state
+        double workCredit = calculateWorkCreditFromStatus(timeSheet);
+        timeSheet.setTotalWorkCredit(workCredit);
+
+        // Save and return
+        return dailyTimeSheetDao.updateDailyTimeSheet(timeSheet);
+    }
+
+    /**
+     * Calculate work credit based on attendance status and WFH flags.
+     */
+    private double calculateWorkCreditFromStatus(DailyTimeSheet timeSheet) {
+        AttendanceStatus morning = timeSheet.getMorningStatus();
+        AttendanceStatus afternoon = timeSheet.getAfternoonStatus();
+
+        double credit = 0.0;
+
+        // Morning credit
+        if (morning == AttendanceStatus.PRESENT) {
+            credit += Constants.HALF_DAY_WORK_CREDIT;
+        }
+
+        // Afternoon credit
+        if (afternoon == AttendanceStatus.PRESENT) {
+            credit += Constants.HALF_DAY_WORK_CREDIT;
+        }
+
+        // If both check-in/out exist and both are PRESENT, use time-based calculation
+        if (timeSheet.getCheckInTime() != null && timeSheet.getCheckOutTime() != null
+                && morning == AttendanceStatus.PRESENT && afternoon == AttendanceStatus.PRESENT
+                && !Boolean.TRUE.equals(timeSheet.getMorningWfh())
+                && !Boolean.TRUE.equals(timeSheet.getAfternoonWfh())) {
+            credit = calculateWorkCredit(timeSheet.getCheckInTime(), timeSheet.getCheckOutTime());
+        }
+
+        return credit;
     }
 
     // ============= Helper Methods =============

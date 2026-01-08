@@ -17,6 +17,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Requ
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.WfhDate;
+import org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity.Enums.AttendanceStatus;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -203,6 +204,65 @@ public class Request {
                                         .currentCheckInTime(currentCheckInTime)
                                         .desiredCheckOutTime(desiredCheckOutTime)
                                         .currentCheckOutTime(currentCheckOutTime)
+                                        .build();
+
+                        // Build and return request entity
+                        return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                                        .requestType(RequestType.TIMESHEET)
+                                        .title(title)
+                                        .userReason(userReason)
+                                        .attachmentUrl(attachmentUrl)
+                                        .employee(User.builder().userId(employeeId).build())
+                                        .additionalTimesheetInfo(additionalTimesheetInfo)
+                                        .build();
+                }
+        }
+
+        /**
+         * Request DTO for creating an extended timesheet correction request (V2).
+         * Supports updating attendance status and WFH flags in addition to check times.
+         */
+        public record CreateTimeSheetRequestRequestV2(
+                        String title,
+
+                        String userReason,
+
+                        String attachmentUrl,
+
+                        @NotBlank(message = "Employee ID is required") String employeeId,
+
+                        @NotNull(message = "Target date is required") LocalDate targetDate,
+
+                        // Check times - now optional for status-only updates
+                        LocalDateTime desiredCheckInTime,
+
+                        LocalDateTime currentCheckInTime,
+
+                        LocalDateTime desiredCheckOutTime,
+
+                        LocalDateTime currentCheckOutTime,
+
+                        // New extended fields for status updates
+                        AttendanceStatus desiredMorningStatus, // PRESENT, LEAVE, or null for no change
+
+                        AttendanceStatus desiredAfternoonStatus, // PRESENT, LEAVE, or null for no change
+
+                        Boolean desiredMorningWfh, // true, false, or null for no change
+
+                        Boolean desiredAfternoonWfh // true, false, or null for no change
+        ) {
+                public org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request toEntity() {
+                        // Build additional timesheet info with extended fields
+                        AdditionalTimesheetInfo additionalTimesheetInfo = AdditionalTimesheetInfo.builder()
+                                        .targetDate(targetDate)
+                                        .desiredCheckInTime(desiredCheckInTime)
+                                        .currentCheckInTime(currentCheckInTime)
+                                        .desiredCheckOutTime(desiredCheckOutTime)
+                                        .currentCheckOutTime(currentCheckOutTime)
+                                        .desiredMorningStatus(desiredMorningStatus)
+                                        .desiredAfternoonStatus(desiredAfternoonStatus)
+                                        .desiredMorningWfh(desiredMorningWfh)
+                                        .desiredAfternoonWfh(desiredAfternoonWfh)
                                         .build();
 
                         // Build and return request entity
