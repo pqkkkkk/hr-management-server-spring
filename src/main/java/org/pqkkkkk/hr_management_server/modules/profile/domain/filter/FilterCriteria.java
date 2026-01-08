@@ -1,5 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.profile.domain.filter;
 
+import java.util.List;
+
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserRole;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserSortingField;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.UserStatus;
@@ -10,18 +12,17 @@ import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.User
 public class FilterCriteria {
 
     public record ProfileFilter(
-        Integer currentPage,
-        Integer pageSize,
-        UserSortingField sortBy,
-        SortDirection sortDirection,
-        String nameTerm,
-        UserRole role,
-        UserGender gender,
-        UserStatus status,
-        UserPosition position,
-        String departmentId,
-        String departmentName
-    ) {
+            Integer currentPage,
+            Integer pageSize,
+            UserSortingField sortBy,
+            SortDirection sortDirection,
+            String nameTerm,
+            List<UserRole> roles,
+            UserGender gender,
+            UserStatus status,
+            UserPosition position,
+            String departmentId,
+            String departmentName) {
 
     }
 }

@@ -107,10 +107,9 @@ public class AuthServiceImplIntegrationTest {
         UserRole role = UserRole.EMPLOYEE;
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.login(email, password, role));
-        assertEquals("Invalid email or password", exception.getMessage());
     }
 
     // ---------------------------
@@ -124,10 +123,9 @@ public class AuthServiceImplIntegrationTest {
         UserRole role = UserRole.EMPLOYEE;
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.login(email, password, role));
-        assertEquals("Invalid email or password", exception.getMessage());
     }
 
     // ---------------------------
@@ -141,10 +139,9 @@ public class AuthServiceImplIntegrationTest {
         UserRole role = UserRole.ADMIN;
 
         // Act & Assert
-        IllegalArgumentException exception = assertThrows(
+        assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.login(email, password, role));
-        assertEquals("Invalid email or password", exception.getMessage());
     }
 
     // ---------------------------

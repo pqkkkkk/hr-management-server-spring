@@ -30,23 +30,23 @@ public class AuthServiceImpl implements AuthService {
         // Step 1: Find user by email
         User user = profileQueryService.getProfileByEmail(email);
         if (user == null) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new IllegalArgumentException("Invalid email");
         }
 
         // Step 2: Check if role matches
-        if (user.getRole() != role) {
-            throw new IllegalArgumentException("Invalid email or password");
+        if (user.getRole() == UserRole.EMPLOYEE && user.getRole() != role) {
+            throw new IllegalArgumentException("Invalid role");
         }
 
         // Step 3: Find credentials and verify password
         UserCredentials credentials = authDao.findByUserId(user.getUserId());
         if (credentials == null) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new IllegalArgumentException("Invalid email");
         }
 
         // Step 4: Verify password using BCrypt
         if (!passwordEncoder.matches(password, credentials.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new IllegalArgumentException("Invalid password");
         }
 
         // Authentication successful, return user
