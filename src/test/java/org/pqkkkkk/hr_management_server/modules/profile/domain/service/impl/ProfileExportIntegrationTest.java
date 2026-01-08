@@ -3,6 +3,7 @@ package org.pqkkkkk.hr_management_server.modules.profile.domain.service.impl;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -119,7 +120,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, UserRole.ADMIN, null, null, null, null, null);
+                null, List.of(UserRole.ADMIN), null, null, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);
@@ -202,7 +203,7 @@ class ProfileExportIntegrationTest {
         ProfileFilter filter = new ProfileFilter(
                 1, 100,
                 UserSortingField.NAME, SortDirection.ASC,
-                null, UserRole.EMPLOYEE, UserGender.FEMALE, UserStatus.ACTIVE, null, null, null);
+                null, List.of(UserRole.EMPLOYEE), UserGender.FEMALE, UserStatus.ACTIVE, null, null, null);
 
         // Act
         String fileUrl = profileQueryService.exportProfiles(filter, SupportedFileFormat.EXCEL);

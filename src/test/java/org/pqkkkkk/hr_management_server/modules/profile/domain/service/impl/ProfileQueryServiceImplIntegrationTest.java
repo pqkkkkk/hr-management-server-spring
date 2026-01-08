@@ -1,5 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.profile.domain.service.impl;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.pqkkkkk.hr_management_server.modules.profile.domain.entity.Enums.*;
@@ -116,7 +118,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // sortBy
                 null, // sortDirection
                 null, // nameTerm
-                UserRole.EMPLOYEE, // role
+                List.of(UserRole.EMPLOYEE), // roles
                 null, // gender
                 null, // status
                 null, // position
@@ -144,7 +146,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // sortBy
                 null, // sortDirection
                 null, // nameTerm
-                UserRole.HR, // role
+                List.of(UserRole.HR), // roles
                 null, // gender
                 null, // status
                 null, // position
@@ -345,7 +347,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // sortBy
                 null, // sortDirection
                 null, // nameTerm
-                UserRole.EMPLOYEE, // role
+                List.of(UserRole.EMPLOYEE), // roles
                 UserGender.MALE, // gender
                 UserStatus.ACTIVE, // status
                 null, // position
@@ -509,7 +511,7 @@ class ProfileQueryServiceImplIntegrationTest {
                 null, // sortBy
                 null, // sortDirection
                 "Le", // nameTerm
-                UserRole.HR, // role
+                List.of(UserRole.HR), // roles
                 null, // gender
                 null, // status
                 null, // position
@@ -584,11 +586,12 @@ class ProfileQueryServiceImplIntegrationTest {
         assertNotNull(user.getUpdatedAt());
         assertNotNull(user.getDepartment());
     }
+
     @Test
     @DisplayName("getProfileById - valid userId - success")
     void testGetProfileById_ValidUserId_Success() {
         // Arrange: Thay userId này bằng userId thực tế có trong migration/test data
-        String validUserId = "u1a2b3c4-e5f6-7890-abcd-ef1234567890";        // Act
+        String validUserId = "u1a2b3c4-e5f6-7890-abcd-ef1234567890"; // Act
         User user = profileQueryService.getProfileById(validUserId);
         // Assert
         assertNotNull(user);
