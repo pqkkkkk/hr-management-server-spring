@@ -15,23 +15,19 @@ ALTER TABLE additional_timesheet_info_table
 ADD COLUMN desired_afternoon_wfh BOOLEAN;
 
 -- Update nullable constraints for check times (they may not always be required)
--- H2 uses SET NULL syntax
+-- Use PostgreSQL compatible syntax (DROP NOT NULL)
 ALTER TABLE additional_timesheet_info_table
 ALTER COLUMN desired_check_in_time
-SET
-    NULL;
+DROP NOT NULL;
 
 ALTER TABLE additional_timesheet_info_table
 ALTER COLUMN desired_check_out_time
-SET
-    NULL;
+DROP NOT NULL;
 
 ALTER TABLE additional_timesheet_info_table
 ALTER COLUMN current_check_in_time
-SET
-    NULL;
+DROP NOT NULL;
 
 ALTER TABLE additional_timesheet_info_table
 ALTER COLUMN current_check_out_time
-SET
-    NULL;
+DROP NOT NULL;
