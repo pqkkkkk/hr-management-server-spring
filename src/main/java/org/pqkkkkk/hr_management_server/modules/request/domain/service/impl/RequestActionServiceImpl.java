@@ -1,12 +1,18 @@
 package org.pqkkkkk.hr_management_server.modules.request.domain.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.BulkApproveResult;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
+import org.pqkkkkk.hr_management_server.modules.request.domain.filter.FilterCriteria.RequestFilter;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestActionService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestCommandService;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestQueryService;
+import org.pqkkkkk.hr_management_server.shared.Constants.SortDirection;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -120,5 +126,63 @@ public class RequestActionServiceImpl implements RequestActionService {
 
         // Delegate to the appropriate service
         return service.delegateRequest(requestId, newProcessorId);
+    }
+
+    @Override
+    @Transactional
+    public BulkApproveResult bulkApprove(RequestFilter filter, String approverId, int maxRequests) {
+        // Validate inputs
+        if (approverId == null || approverId.isBlank()) {
+            throw new IllegalArgumentException("Approver ID is required");
+        }
+        if (maxRequests <= 0) {
+            throw new IllegalArgumentException("Max requests must be positive");
+        }
+
+        // Create filter with PENDING status and appropriate page size
+        RequestFilter pendingFilter = new RequestFilter(
+                filter.employeeId(),
+                filter.approverId(), // Filter by manager who has authority to approve
+                filter.processorId(), // Filter by delegated processor
+                filter.departmentId(),
+                filter.nameTerm(),
+                RequestStatus.PENDING, // Always filter by PENDING status
+                filter.type(),
+                filter.startDate(),
+                filter.endDate(),
+                1, // First page
+                maxRequests, // Page size = max requests
+                "createdAt",
+                SortDirection.ASC);
+
+        // Get pending requests
+        Page<Request> pendingRequests = queryService.getRequests(pendingFilter);
+
+        List<String> approvedRequestIds = new ArrayList<>();
+        List<BulkApproveResult.FailedApproval> failedApprovals = new ArrayList<>();
+
+        // Process each request
+        for (Request request : pendingRequests.getContent()) {
+            try {
+                // Attempt to approve
+                approve(request.getRequestId(), approverId);
+                approvedRequestIds.add(request.getRequestId());
+            } catch (Exception e) {
+                // Collect failure info and continue
+                String employeeName = request.getEmployee() != null
+                        ? request.getEmployee().getFullName()
+                        : "Unknown";
+                failedApprovals.add(new BulkApproveResult.FailedApproval(
+                        request.getRequestId(),
+                        employeeName,
+                        e.getMessage()));
+            }
+        }
+
+        return new BulkApproveResult(
+                pendingRequests.getContent().size(),
+                approvedRequestIds.size(),
+                approvedRequestIds,
+                failedApprovals);
     }
 }

@@ -30,12 +30,12 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         if (dailyTsId == null || dailyTsId.isBlank()) {
             throw new IllegalArgumentException("Daily timesheet ID must not be null or empty");
         }
-        
+
         DailyTimeSheet timesheet = dailyTimeSheetDao.getDailyTimeSheetById(dailyTsId);
         if (timesheet == null) {
             throw new IllegalArgumentException("Timesheet not found with ID: " + dailyTsId);
         }
-        
+
         return timesheet;
     }
 
@@ -52,22 +52,21 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         TimeSheetFilter filter = new TimeSheetFilter(
-            employeeId,
-            startDate.toString(),
-            endDate.toString(),
-            null, null, null, null, null,
-            null, null, "date", "ASC"
-        );
+                employeeId,
+                startDate.toString(),
+                endDate.toString(),
+                null, null, null, null, null,
+                null, null, "date", "ASC");
 
         return dailyTimeSheetDao.getTimeSheets(filter);
     }
 
     @Override
     public List<DailyTimeSheet> getTimeSheetsOfEmployeeByDateRange(
-            String employeeId, 
-            LocalDate startDate, 
+            String employeeId,
+            LocalDate startDate,
             LocalDate endDate) {
-        
+
         if (employeeId == null || employeeId.isBlank()) {
             throw new IllegalArgumentException("Employee ID must not be null or empty");
         }
@@ -79,21 +78,20 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         }
 
         TimeSheetFilter filter = new TimeSheetFilter(
-            employeeId,
-            startDate.toString(),
-            endDate.toString(),
-            null, null, null, null, null,
-            null, null, "date", "ASC"
-        );
+                employeeId,
+                startDate.toString(),
+                endDate.toString(),
+                null, null, null, null, null,
+                null, null, "date", "ASC");
 
         return dailyTimeSheetDao.getTimeSheets(filter);
     }
 
     @Override
     public Map<String, List<DailyTimeSheet>> getMonthlyTimeSheetsOfEmployees(
-            List<String> employeeIds, 
+            List<String> employeeIds,
             YearMonth yearMonth) {
-        
+
         if (employeeIds == null || employeeIds.isEmpty()) {
             throw new IllegalArgumentException("Employee IDs list must not be null or empty");
         }
@@ -105,26 +103,24 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         return employeeIds.stream()
-            .collect(Collectors.toMap(
-                empId -> empId,
-                empId -> {
-                    TimeSheetFilter filter = new TimeSheetFilter(
-                        empId,
-                        startDate.toString(),
-                        endDate.toString(),
-                        null, null, null, null, null,
-                        null, null, "date", "ASC"
-                    );
-                    return dailyTimeSheetDao.getTimeSheets(filter);
-                }
-            ));
+                .collect(Collectors.toMap(
+                        empId -> empId,
+                        empId -> {
+                            TimeSheetFilter filter = new TimeSheetFilter(
+                                    empId,
+                                    startDate.toString(),
+                                    endDate.toString(),
+                                    null, null, null, null, null,
+                                    null, null, "date", "ASC");
+                            return dailyTimeSheetDao.getTimeSheets(filter);
+                        }));
     }
 
     @Override
     public Map<String, List<DailyTimeSheet>> getMonthlyTimeSheetsOfDepartment(
-            String departmentId, 
+            String departmentId,
             YearMonth yearMonth) {
-        
+
         if (departmentId == null || departmentId.isBlank()) {
             throw new IllegalArgumentException("Department ID must not be null or empty");
         }
@@ -132,12 +128,12 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
             throw new IllegalArgumentException("Year-month must not be null");
         }
 
-        // Note: This implementation assumes you have a way to get employee IDs by department
+        // Note: This implementation assumes you have a way to get employee IDs by
+        // department
         // If you need to implement this, you'll need to inject UserDao or ProfileDao
         throw new UnsupportedOperationException(
-            "Department-wide timesheet query requires UserDao dependency. " +
-            "Please inject UserDao to get employees by department ID."
-        );
+                "Department-wide timesheet query requires UserDao dependency. " +
+                        "Please inject UserDao to get employees by department ID.");
     }
 
     @Override
@@ -165,17 +161,16 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         Double totalCredits = dailyTimeSheetDao.sumWorkCreditsByEmployeeAndDateRange(
-            employeeId, startDate, endDate
-        );
+                employeeId, startDate, endDate);
 
         return totalCredits != null ? totalCredits : 0.0;
     }
 
     @Override
     public Map<String, Object> calculateMonthlyAttendanceStatistics(
-            String employeeId, 
+            String employeeId,
             YearMonth yearMonth) {
-        
+
         if (employeeId == null || employeeId.isBlank()) {
             throw new IllegalArgumentException("Employee ID must not be null or empty");
         }
@@ -187,5 +182,53 @@ public class TimeSheetQueryServiceImpl implements TimeSheetQueryService {
         LocalDate endDate = yearMonth.atEndOfMonth();
 
         return dailyTimeSheetDao.getAttendanceStatistics(employeeId, startDate, endDate);
+    }
+
+    @Override
+    public List<Map<String, Object>> getBatchAttendanceStatistics(
+            List<String> userIds, LocalDate startDate, LocalDate endDate) {
+
+        if (userIds == null || userIds.isEmpty()) {
+            throw new IllegalArgumentException("User IDs list must not be null or empty");
+        }
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date must not be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must be before or equal to end date");
+        }
+
+        List<Map<String, Object>> results = new java.util.ArrayList<>(
+                dailyTimeSheetDao.getBatchAttendanceStatistics(userIds, startDate, endDate));
+
+        // Get the set of user IDs that have data
+        java.util.Set<String> returnedUserIds = results.stream()
+                .map(r -> (String) r.get("userId"))
+                .collect(java.util.stream.Collectors.toSet());
+
+        // Add empty statistics for users without data
+        for (String userId : userIds) {
+            if (!returnedUserIds.contains(userId)) {
+                results.add(createEmptyStatistics(userId));
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * Create empty statistics map with 0 values for users without timesheet data
+     */
+    private Map<String, Object> createEmptyStatistics(String userId) {
+        Map<String, Object> emptyStats = new java.util.HashMap<>();
+        emptyStats.put("userId", userId);
+        emptyStats.put("totalDays", 0L);
+        emptyStats.put("morningPresent", 0L);
+        emptyStats.put("afternoonPresent", 0L);
+        emptyStats.put("lateDays", 0L);
+        emptyStats.put("totalLateMinutes", 0L);
+        emptyStats.put("totalOvertimeMinutes", 0L);
+        emptyStats.put("totalWorkCredit", 0.0);
+        return emptyStats;
     }
 }

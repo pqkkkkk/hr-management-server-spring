@@ -114,6 +114,43 @@ public class Request {
         }
 
         /**
+         * Request DTO for bulk approving requests.
+         * Contains approverId for the action + filter criteria.
+         * Status is always PENDING for bulk approve, so it's not included.
+         */
+        public record BulkApproveRequest(
+                        @NotBlank(message = "Approver ID is required") @NotNull(message = "Approver ID cannot be null") String approverId,
+                        String employeeId,
+                        String processorId,
+                        String departmentId,
+                        String nameTerm,
+                        RequestType type,
+                        LocalDate startDate,
+                        LocalDate endDate) {
+        }
+
+        /**
+         * Response DTO for a single failed approval in bulk operation
+         */
+        public record BulkApproveFailedItem(
+                        String requestId,
+                        String employeeName,
+                        String reason) {
+        }
+
+        /**
+         * Response DTO for bulk approve operation
+         */
+        public record BulkApproveResponse(
+                        int totalProcessed,
+                        int successCount,
+                        int failedCount,
+                        List<String> approvedRequestIds,
+                        List<BulkApproveFailedItem> failedRequests) {
+        }
+
+        /**
+         * 
          * Request DTO for creating a check-in request
          */
         public record CreateCheckInRequestRequest(
