@@ -1,10 +1,16 @@
 package org.pqkkkkk.hr_management_server.modules.request.controller.http;
 
+import java.util.stream.Collectors;
+
 import org.pqkkkkk.hr_management_server.modules.profile.controller.http.dto.Response.ApiResponse;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.RequestDTO;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.ApproveRequestRequest;
+import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.BulkApproveFailedItem;
+import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.BulkApproveRequest;
+import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.BulkApproveResponse;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.DelegateRequestRequest;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.RejectRequestRequest;
+import org.pqkkkkk.hr_management_server.modules.request.domain.entity.BulkApproveResult;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.filter.FilterCriteria.RequestFilter;
 import org.pqkkkkk.hr_management_server.modules.request.domain.service.RequestActionService;
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +32,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/requests")
 public class RequestApi {
+        /**
+         * Maximum number of requests that can be bulk approved in a single operation.
+         */
+        private static final int BULK_APPROVE_MAX_REQUESTS = 50;
+
         private final RequestQueryService requestQueryService;
         private final RequestActionService requestActionService;
 
@@ -186,6 +198,76 @@ public class RequestApi {
                                 true,
                                 HttpStatus.OK.value(),
                                 "Request delegated successfully.",
+                                null);
+
+                return ResponseEntity.ok(apiResponse);
+        }
+
+        /**
+         * Bulk approve all pending requests matching the filter criteria.
+         * <p>
+         * This endpoint allows managers to approve multiple pending requests at once.
+         * Uses partial success strategy - continues approving even if some fail.
+         * <p>
+         * Rate limit: Maximum 50 requests per bulk operation.
+         * 
+         * @param request The bulk approve request containing approverId and filter
+         *                criteria
+         * @return BulkApproveResponse with success/failure counts and details
+         */
+        @PostMapping("/bulk-approve")
+        public ResponseEntity<ApiResponse<BulkApproveResponse>> bulkApprove(
+                        @Valid @RequestBody BulkApproveRequest request) {
+
+                // Convert BulkApproveRequest to RequestFilter
+                // approverId is used as filter - manager can only approve requests assigned to
+                // them
+                RequestFilter filter = new RequestFilter(
+                                request.employeeId(),
+                                request.approverId(), // Filter by manager's ID - they can only approve their assigned
+                                                      // requests
+                                request.processorId(),
+                                request.departmentId(),
+                                request.nameTerm(),
+                                null, // status - will be set to PENDING in service
+                                request.type(),
+                                request.startDate(),
+                                request.endDate(),
+                                null, // currentPage
+                                null, // pageSize
+                                null, // sortBy
+                                null); // sortDirection
+
+                // Call service
+                BulkApproveResult result = requestActionService.bulkApprove(
+                                filter,
+                                request.approverId(),
+                                BULK_APPROVE_MAX_REQUESTS);
+
+                // Convert domain result to response DTO
+                BulkApproveResponse response = new BulkApproveResponse(
+                                result.totalProcessed(),
+                                result.successCount(),
+                                result.failedCount(),
+                                result.approvedRequestIds(),
+                                result.failedApprovals().stream()
+                                                .map(fa -> new BulkApproveFailedItem(
+                                                                fa.requestId(),
+                                                                fa.employeeName(),
+                                                                fa.reason()))
+                                                .collect(Collectors.toList()));
+
+                // Build API response
+                String message = String.format(
+                                "Bulk approve completed. %d approved, %d failed.",
+                                result.successCount(),
+                                result.failedCount());
+
+                ApiResponse<BulkApproveResponse> apiResponse = new ApiResponse<>(
+                                response,
+                                true,
+                                HttpStatus.OK.value(),
+                                message,
                                 null);
 
                 return ResponseEntity.ok(apiResponse);

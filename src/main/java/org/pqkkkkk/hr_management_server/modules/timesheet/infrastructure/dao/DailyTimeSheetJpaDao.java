@@ -62,7 +62,7 @@ public class DailyTimeSheetJpaDao implements DailyTimeSheetDao {
             LocalDate startDate,
             LocalDate endDate) {
         Object[] result = (Object[]) repository.getAttendanceStatistics(employeeId, startDate, endDate)[0];
-        
+
         Map<String, Object> statistics = new HashMap<>();
         if (result != null && result.length >= 7) {
             statistics.put("totalDays", result[0]);
@@ -73,7 +73,7 @@ public class DailyTimeSheetJpaDao implements DailyTimeSheetDao {
             statistics.put("totalOvertimeMinutes", result[5]);
             statistics.put("totalWorkCredit", result[6]);
         }
-        
+
         return statistics;
     }
 
@@ -90,12 +90,30 @@ public class DailyTimeSheetJpaDao implements DailyTimeSheetDao {
     @Override
     public List<DailyTimeSheet> getTimeSheets(TimeSheetFilter filter) {
         Specification<DailyTimeSheet> spec = DailyTimeSheetSpecification.buildSpecification(filter);
-        
+
         Sort sort = Sort.by(
-            Sort.Direction.fromString(filter.sortDirection()),
-            filter.sortBy()
-        );
-        
+                Sort.Direction.fromString(filter.sortDirection()),
+                filter.sortBy());
+
         return repository.findAll(spec, sort);
+    }
+
+    @Override
+    public List<Map<String, Object>> getBatchAttendanceStatistics(
+            List<String> userIds, LocalDate startDate, LocalDate endDate) {
+        List<Object[]> results = repository.getBatchAttendanceStatistics(userIds, startDate, endDate);
+
+        return results.stream().map(row -> {
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("userId", row[0]);
+            stats.put("totalDays", row[1]);
+            stats.put("morningPresent", row[2]);
+            stats.put("afternoonPresent", row[3]);
+            stats.put("lateDays", row[4]);
+            stats.put("totalLateMinutes", row[5]);
+            stats.put("totalOvertimeMinutes", row[6]);
+            stats.put("totalWorkCredit", row[7]);
+            return stats;
+        }).toList();
     }
 }
