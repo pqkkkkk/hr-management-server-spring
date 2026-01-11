@@ -129,11 +129,11 @@ public class RequestActionServiceImpl implements RequestActionService {
     }
 
     @Override
-    @Transactional
     public BulkApproveResult bulkApprove(RequestFilter filter, String approverId, int maxRequests) {
         // Validate inputs
-        if (approverId == null || approverId.isBlank()) {
-            throw new IllegalArgumentException("Approver ID is required");
+        if ((approverId == null || approverId.isBlank())
+                && (filter.processorId() == null || filter.processorId().isBlank())) {
+            throw new IllegalArgumentException("Approver ID or Processor ID is required");
         }
         if (maxRequests <= 0) {
             throw new IllegalArgumentException("Max requests must be positive");
@@ -164,14 +164,25 @@ public class RequestActionServiceImpl implements RequestActionService {
         // Process each request
         for (Request request : pendingRequests.getContent()) {
             try {
+                // Fix: Logic was REVERSED. Correct: if approverId is valid, use it; else use
+                // processorId
+                String actualApproverId = (approverId != null && !approverId.isBlank())
+                        ? approverId
+                        : filter.processorId();
                 // Attempt to approve
-                approve(request.getRequestId(), approverId);
+                approve(request.getRequestId(), actualApproverId);
                 approvedRequestIds.add(request.getRequestId());
             } catch (Exception e) {
                 // Collect failure info and continue
-                String employeeName = request.getEmployee() != null
-                        ? request.getEmployee().getFullName()
-                        : "Unknown";
+                String employeeName = "Unknown";
+                try {
+                    if (request.getEmployee() != null) {
+                        employeeName = request.getEmployee().getFullName();
+                    }
+                } catch (Exception lazyEx) {
+                    employeeName = "Employee (Details Unavailable)";
+                }
+
                 failedApprovals.add(new BulkApproveResult.FailedApproval(
                         request.getRequestId(),
                         employeeName,

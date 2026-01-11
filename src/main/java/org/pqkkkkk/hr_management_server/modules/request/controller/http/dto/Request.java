@@ -119,7 +119,7 @@ public class Request {
          * Status is always PENDING for bulk approve, so it's not included.
          */
         public record BulkApproveRequest(
-                        @NotBlank(message = "Approver ID is required") @NotNull(message = "Approver ID cannot be null") String approverId,
+                        String approverId,
                         String employeeId,
                         String processorId,
                         String departmentId,

@@ -1,5 +1,7 @@
 package org.pqkkkkk.hr_management_server.modules.request.domain.service.impl;
 
+import java.util.Objects;
+
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.dao.RequestDao;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
@@ -13,6 +15,7 @@ public class RequestValidationServiceImpl implements RequestValidationService {
     public RequestValidationServiceImpl(RequestDao requestDao) {
         this.requestDao = requestDao;
     }
+
     public Request checkRequestIsValid(String requestId) {
         Request existingRequest = requestDao.getRequestById(requestId);
 
@@ -20,7 +23,7 @@ public class RequestValidationServiceImpl implements RequestValidationService {
             throw new IllegalArgumentException("Request does not exist.");
         }
 
-        if(existingRequest.getStatus() != RequestStatus.PENDING) {
+        if (existingRequest.getStatus() != RequestStatus.PENDING) {
             throw new IllegalStateException("Request is not in a valid state for this operation.");
         }
 
@@ -31,7 +34,7 @@ public class RequestValidationServiceImpl implements RequestValidationService {
         String actualApproverId = request.getApprover() == null ? null : request.getApprover().getUserId();
         String actualProcessorId = request.getProcessor() == null ? null : request.getProcessor().getUserId();
 
-        if(!approverId.equals(actualApproverId) && !approverId.equals(actualProcessorId)) {
+        if (!Objects.equals(approverId, actualApproverId) && !Objects.equals(approverId, actualProcessorId)) {
             throw new SecurityException("Approver does not have permission to perform this action.");
         }
     }

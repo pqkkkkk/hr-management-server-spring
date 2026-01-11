@@ -218,7 +218,9 @@ public class RequestApi {
         @PostMapping("/bulk-approve")
         public ResponseEntity<ApiResponse<BulkApproveResponse>> bulkApprove(
                         @Valid @RequestBody BulkApproveRequest request) {
-
+                if (request.approverId() == null && request.processorId() == null) {
+                        throw new IllegalArgumentException("Approver ID or Processor ID is required");
+                }
                 // Convert BulkApproveRequest to RequestFilter
                 // approverId is used as filter - manager can only approve requests assigned to
                 // them
