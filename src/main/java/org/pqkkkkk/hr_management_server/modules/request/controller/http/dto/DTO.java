@@ -10,6 +10,7 @@ import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.Leav
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.ShiftType;
+import org.pqkkkkk.hr_management_server.modules.timesheet.domain.entity.Enums.AttendanceStatus;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.LeaveDate;
 
 /**
@@ -320,7 +321,11 @@ public class DTO {
             LocalDateTime desiredCheckInTime,
             LocalDateTime currentCheckInTime,
             LocalDateTime desiredCheckOutTime,
-            LocalDateTime currentCheckOutTime) {
+            LocalDateTime currentCheckOutTime,
+            AttendanceStatus desiredMorningStatus,
+            AttendanceStatus desiredAfternoonStatus,
+            Boolean desiredMorningWfh,
+            Boolean desiredAfternoonWfh) {
         public static TimeSheetRequestDTO fromEntity(
                 org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request) {
             if (request == null) {
@@ -368,7 +373,11 @@ public class DTO {
                     desiredCheckInTime,
                     currentCheckInTime,
                     desiredCheckOutTime,
-                    currentCheckOutTime);
+                    currentCheckOutTime,
+                    request.getAdditionalTimesheetInfo().getDesiredMorningStatus(),
+                    request.getAdditionalTimesheetInfo().getDesiredAfternoonStatus(),
+                    request.getAdditionalTimesheetInfo().getDesiredMorningWfh(),
+                    request.getAdditionalTimesheetInfo().getDesiredAfternoonWfh());
         }
     }
 

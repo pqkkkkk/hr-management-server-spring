@@ -187,18 +187,25 @@ public class TimeSheetValidationServiceImpl implements TimeSheetValidationServic
             AttendanceStatus morningStatus, AttendanceStatus afternoonStatus,
             Boolean morningWfh, Boolean afternoonWfh) {
 
-        // Rule 1: If PRESENT and not WFH, check times should be provided
-        if (morningStatus == AttendanceStatus.PRESENT && !Boolean.TRUE.equals(morningWfh)) {
+        // Determine if any shift requires physical presence (PRESENT and not WFH)
+        boolean morningRequiresPresence = morningStatus == AttendanceStatus.PRESENT
+                && !Boolean.TRUE.equals(morningWfh);
+        boolean afternoonRequiresPresence = afternoonStatus == AttendanceStatus.PRESENT
+                && !Boolean.TRUE.equals(afternoonWfh);
+        boolean anyShiftRequiresPresence = morningRequiresPresence || afternoonRequiresPresence;
+
+        // Rule 1: If any shift requires physical presence, BOTH check-in and check-out
+        // are required
+        // (Even half-day workers need to check in when arriving and check out when
+        // leaving)
+        if (anyShiftRequiresPresence) {
             if (checkIn == null) {
                 throw new IllegalArgumentException(
-                        "Check-in time is required when setting morning status to PRESENT (not WFH).");
+                        "Check-in time is required when any shift is PRESENT (not WFH).");
             }
-        }
-
-        if (afternoonStatus == AttendanceStatus.PRESENT && !Boolean.TRUE.equals(afternoonWfh)) {
             if (checkOut == null) {
                 throw new IllegalArgumentException(
-                        "Check-out time is required when setting afternoon status to PRESENT (not WFH).");
+                        "Check-out time is required when any shift is PRESENT (not WFH).");
             }
         }
 

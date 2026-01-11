@@ -2,6 +2,7 @@ package org.pqkkkkk.hr_management_server.modules.request.controller.http;
 
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.DTO.TimeSheetRequestDTO;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.CreateTimeSheetRequestRequest;
+import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Request.CreateTimeSheetRequestRequestV2;
 import org.pqkkkkk.hr_management_server.modules.request.controller.http.dto.Response.ApiResponse;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request;
 import org.pqkkkkk.hr_management_server.modules.request.domain.entity.Enums.RequestType;
@@ -74,7 +75,7 @@ public class TimeSheetRequestApi {
          */
         @PostMapping
         public ResponseEntity<ApiResponse<TimeSheetRequestDTO>> createTimeSheetRequest(
-                        @Valid @RequestBody CreateTimeSheetRequestRequest request) {
+                        @Valid @RequestBody CreateTimeSheetRequestRequestV2 request) {
 
                 // Convert DTO to entity
                 Request requestEntity = request.toEntity();
