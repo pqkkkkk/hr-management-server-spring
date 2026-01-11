@@ -80,10 +80,6 @@ public class TimesheetRequestCommandServiceImpl implements RequestCommandService
                         : null)
                 : null;
 
-        if (checkIn == null && checkOut == null) {
-            throw new IllegalArgumentException("At least one of check-in or check-out must be provided");
-        }
-
         if (checkIn != null && checkOut != null && !checkIn.isBefore(checkOut)) {
             throw new IllegalArgumentException("Check-in must be before check-out");
         }
@@ -130,7 +126,11 @@ public class TimesheetRequestCommandServiceImpl implements RequestCommandService
                     req.getEmployee().getUserId(),
                     timesheetInfo.getTargetDate(),
                     timesheetInfo.getDesiredCheckInTime(),
-                    timesheetInfo.getDesiredCheckOutTime());
+                    timesheetInfo.getDesiredCheckOutTime(),
+                    timesheetInfo.getDesiredMorningStatus(),
+                    timesheetInfo.getDesiredAfternoonStatus(),
+                    timesheetInfo.getDesiredMorningWfh(),
+                    timesheetInfo.getDesiredAfternoonWfh());
         }
 
         // Step 5: Publish event for further processing (e.g., notifications)

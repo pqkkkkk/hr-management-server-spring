@@ -243,8 +243,9 @@ public class Request {
                                         .currentCheckOutTime(currentCheckOutTime)
                                         .build();
 
-                        // Build and return request entity
-                        return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                        // Build request entity
+                        org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request = org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request
+                                        .builder()
                                         .requestType(RequestType.TIMESHEET)
                                         .title(title)
                                         .userReason(userReason)
@@ -252,6 +253,11 @@ public class Request {
                                         .employee(User.builder().userId(employeeId).build())
                                         .additionalTimesheetInfo(additionalTimesheetInfo)
                                         .build();
+
+                        // Set the back-reference (CRITICAL for @MapsId)
+                        additionalTimesheetInfo.setRequest(request);
+
+                        return request;
                 }
         }
 
@@ -302,8 +308,9 @@ public class Request {
                                         .desiredAfternoonWfh(desiredAfternoonWfh)
                                         .build();
 
-                        // Build and return request entity
-                        return org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request.builder()
+                        // Build request entity
+                        org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request request = org.pqkkkkk.hr_management_server.modules.request.domain.entity.Request
+                                        .builder()
                                         .requestType(RequestType.TIMESHEET)
                                         .title(title)
                                         .userReason(userReason)
@@ -311,6 +318,11 @@ public class Request {
                                         .employee(User.builder().userId(employeeId).build())
                                         .additionalTimesheetInfo(additionalTimesheetInfo)
                                         .build();
+
+                        // Set the back-reference (CRITICAL for @MapsId)
+                        additionalTimesheetInfo.setRequest(request);
+
+                        return request;
                 }
         }
 
