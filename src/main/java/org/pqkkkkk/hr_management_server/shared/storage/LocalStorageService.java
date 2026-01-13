@@ -15,7 +15,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Profile({"docker", "test"})
+@Profile({ "test" })
 @Slf4j
 public class LocalStorageService implements StorageService {
 
@@ -46,18 +46,18 @@ public class LocalStorageService implements StorageService {
         try {
             // Generate unique filename to avoid conflicts
             String uniqueFilename = generateUniqueFileName(originalFilename);
-            
+
             // Create file path
             Path filePath = Paths.get(storageDirectory, uniqueFilename);
-            
+
             // Write file to local storage
             Files.write(filePath, fileData, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            
+
             log.info("File stored successfully in local storage: {}", uniqueFilename);
-            
+
             // Return URL to access the file
             String fileUrl = baseUrl + "/" + uniqueFilename;
-            
+
             return fileUrl;
         } catch (IOException e) {
             log.error("Failed to store file locally: {}", originalFilename, e);
@@ -71,13 +71,13 @@ public class LocalStorageService implements StorageService {
     private String generateUniqueFileName(String originalFilename) {
         String uuid = UUID.randomUUID().toString().substring(0, 8); // Short UUID for readability
         int dotIndex = originalFilename.lastIndexOf('.');
-        
+
         if (dotIndex > 0) {
             String nameWithoutExtension = originalFilename.substring(0, dotIndex);
             String extension = originalFilename.substring(dotIndex);
             return String.format("%s_%s%s", nameWithoutExtension, uuid, extension);
         }
-        
+
         return String.format("%s_%s", originalFilename, uuid);
     }
 
@@ -95,13 +95,13 @@ public class LocalStorageService implements StorageService {
         try {
             Path filePath = Paths.get(storageDirectory, filename);
             boolean deleted = Files.deleteIfExists(filePath);
-            
+
             if (deleted) {
                 log.info("File deleted successfully from local storage: {}", filename);
             } else {
                 log.warn("File not found in local storage: {}", filename);
             }
-            
+
             return deleted;
         } catch (IOException e) {
             log.error("Failed to delete file from local storage: {}", filename, e);
